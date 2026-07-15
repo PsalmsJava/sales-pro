@@ -1,0 +1,14 @@
+{
+    "watch": [
+        "src"
+    ],
+    "ext": "js,json",
+    "ignore": [
+        "node_modules",
+        "logs",
+        "src/migrations",
+        "src/seeds",
+        "*.log"
+    ],
+    "delay": "1000"
+}

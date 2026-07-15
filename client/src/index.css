@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@layer base {
+    :root {
+        --toast-bg: #ffffff;
+        --toast-color: #1e293b;
+    }
+
+    .dark {
+        --toast-bg: #1e293b;
+        --toast-color: #f1f5f9;
+    }
+
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    *::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 20px;
+    }
+
+    .dark *::-webkit-scrollbar-thumb {
+        background-color: #475569;
+    }
+
+    body {
+        @apply bg-surface-light dark:bg-surface-dark text-brand-800 dark:text-slate-200 antialiased;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+}
+
+@layer components {
+    .glass-effect {
+        @apply bg-white/80 dark:bg-brand-900/80 backdrop-blur-xl;
+    }
+}
