@@ -6,23 +6,19 @@ const logger = require('../utils/logger');
 class OrderService {
     async createOrder(orderData) {
         try {
-            // Validate product exists and has stock
             const product = await productRepository.findById(orderData.productId);
 
             if (product.quantity < orderData.quantity) {
                 throw new Error(`Only ${product.quantity} units available in stock`);
             }
 
-            // Calculate total
             const totalAmount = product.price * orderData.quantity;
 
-            // Create order with customer
             const result = await orderRepository.create({
                 ...orderData,
                 totalAmount
             });
 
-            // Reserve stock
             await productRepository.updateQuantity(
                 orderData.productId,
                 orderData.quantity,
@@ -52,12 +48,10 @@ class OrderService {
         try {
             const order = await orderRepository.findById(id);
 
-            // Sales reps can only see their own orders
             if (userRole === 'sales_rep' && order.sales_rep_id !== userId) {
                 throw new Error('You can only view your assigned orders');
             }
 
-            // Sales reps cannot see full customer details
             if (userRole === 'sales_rep') {
                 return this.formatOrderForSalesRep(order);
             }
@@ -71,7 +65,6 @@ class OrderService {
 
     async getAllOrders(filters, userId, userRole) {
         try {
-            // Sales reps can only see their orders
             if (userRole === 'sales_rep') {
                 filters.salesRepId = userId;
             }
@@ -98,10 +91,8 @@ class OrderService {
         try {
             const order = await orderRepository.findById(id);
 
-            // Validate status transitions
             this.validateStatusTransition(order.status, status, userRole);
 
-            // If cancelling, restore stock
             if (status === 'cancelled' && order.status !== 'cancelled') {
                 await productRepository.updateQuantity(
                     order.product_id,
@@ -126,14 +117,132 @@ class OrderService {
         }
     }
 
+    // ==========================================
+    // RESCHEDULE
+    // ==========================================
+    async rescheduleOrder(id, { scheduledAt, reason }, userId, userRole) {
+        try {
+            const order = await orderRepository.findById(id);
+
+            if (!order) {
+                throw new Error('Order not found');
+            }
+
+            // Sales reps can only reschedule their own orders
+            if (userRole === 'sales_rep' && order.sales_rep_id !== userId) {
+                throw new Error('You can only reschedule your assigned orders');
+            }
+
+            // Only non-terminal orders can be rescheduled
+            const terminalStatuses = ['delivered', 'completed', 'cancelled'];
+            if (terminalStatuses.includes(order.status)) {
+                throw new Error(`Cannot reschedule an order with status "${order.status}"`);
+            }
+
+            // Validate scheduledAt
+            if (!scheduledAt) {
+                throw new Error('A new scheduled date is required');
+            }
+
+            const parsed = new Date(scheduledAt);
+            if (isNaN(parsed.getTime())) {
+                throw new Error('Invalid scheduled date');
+            }
+
+            if (parsed.getTime() <= Date.now()) {
+                throw new Error('Scheduled date must be in the future');
+            }
+
+            const updated = await orderRepository.reschedule(id, {
+                scheduledAt: parsed,
+                reason: reason || null,
+                userId
+            });
+
+            logger.info('Order rescheduled', {
+                orderId: id,
+                scheduledAt: parsed.toISOString(),
+                reason,
+                updatedBy: userId
+            });
+
+            return userRole === 'sales_rep'
+                ? this.formatOrderForSalesRep(updated)
+                : this.formatOrder(updated);
+        } catch (error) {
+            logger.error('Reschedule order service error', { error: error.message, orderId: id });
+            throw error;
+        }
+    }
+
+    // ==========================================
+    // CALLBACK
+    // ==========================================
+    async scheduleCallback(id, { callbackAt, comment }, userId, userRole) {
+        try {
+            const order = await orderRepository.findById(id);
+
+            if (!order) {
+                throw new Error('Order not found');
+            }
+
+            if (userRole === 'sales_rep' && order.sales_rep_id !== userId) {
+                throw new Error('You can only schedule callbacks for your assigned orders');
+            }
+
+            const terminalStatuses = ['delivered', 'completed', 'cancelled'];
+            if (terminalStatuses.includes(order.status)) {
+                throw new Error(`Cannot schedule a callback for an order with status "${order.status}"`);
+            }
+
+            if (!callbackAt) {
+                throw new Error('A callback date and time is required');
+            }
+
+            const parsed = new Date(callbackAt);
+            if (isNaN(parsed.getTime())) {
+                throw new Error('Invalid callback date');
+            }
+
+            if (parsed.getTime() <= Date.now()) {
+                throw new Error('Callback date must be in the future');
+            }
+
+            if (!comment || !comment.trim()) {
+                throw new Error('A callback comment is required');
+            }
+
+            if (comment.length > 1000) {
+                throw new Error('Callback comment must be 1000 characters or fewer');
+            }
+
+            const updated = await orderRepository.scheduleCallback(id, {
+                callbackAt: parsed,
+                comment: comment.trim(),
+                userId
+            });
+
+            logger.info('Callback scheduled', {
+                orderId: id,
+                callbackAt: parsed.toISOString(),
+                updatedBy: userId
+            });
+
+            return userRole === 'sales_rep'
+                ? this.formatOrderForSalesRep(updated)
+                : this.formatOrder(updated);
+        } catch (error) {
+            logger.error('Schedule callback service error', { error: error.message, orderId: id });
+            throw error;
+        }
+    }
+
     async assignOrdersToSalesReps() {
         try {
-            // Get all unassigned orders
             const unassignedOrders = await orderRepository.getUnassignedOrders();
 
             if (unassignedOrders.length === 0) return [];
 
-            // Get all active sales reps
             const salesReps = await userRepository.findAll({
                 role: 'sales_rep',
                 isActive: true
@@ -144,7 +253,6 @@ class OrderService {
                 return [];
             }
 
-            // Get current order counts for each rep
             const repOrderCounts = await Promise.all(
                 salesReps.map(async (rep) => ({
                     repId: rep.id,
@@ -154,16 +262,11 @@ class OrderService {
 
             const assignments = [];
 
-            // Round-robin assignment with equal distribution
             for (const order of unassignedOrders) {
-                // Find rep with fewest active orders
                 const sortedReps = repOrderCounts.sort((a, b) => a.activeOrders - b.activeOrders);
                 const selectedRep = sortedReps[0];
 
-                // Assign order
                 await orderRepository.assignSalesRep(order.id, selectedRep.repId);
-
-                // Update count
                 selectedRep.activeOrders++;
 
                 assignments.push({
@@ -203,6 +306,29 @@ class OrderService {
         }
     }
 
+    async getCallbacks(userId, userRole) {
+        try {
+            const salesRepId = userRole === 'sales_rep' ? userId : null;
+            const rows = await orderRepository.getDueCallbacks(salesRepId);
+
+            return rows.map((row) => ({
+                id: row.id,
+                productName: row.product_name,
+                status: row.status,
+                callbackAt: row.callback_at,
+                callbackComment: row.callback_comment,
+                customer: {
+                    firstName: row.customer_first_name,
+                    lastName: row.customer_last_name,
+                    phone: row.customer_phone
+                }
+            }));
+        } catch (error) {
+            logger.error('Get callbacks error', { error: error.message, userId });
+            throw error;
+        }
+    }
+
     validateStatusTransition(currentStatus, newStatus, userRole) {
         const validTransitions = {
             pending: ['assigned', 'cancelled'],
@@ -221,12 +347,10 @@ class OrderService {
             dispatch_partner: ['dispatched', 'delivered']
         };
 
-        // Check if role can make this transition
         if (roleTransitions[userRole] && !roleTransitions[userRole].includes(newStatus)) {
             throw new Error('You do not have permission to change order to this status');
         }
 
-        // Check if transition is valid
         if (!validTransitions[currentStatus]?.includes(newStatus)) {
             throw new Error(`Cannot change order status from ${currentStatus} to ${newStatus}`);
         }
@@ -245,6 +369,11 @@ class OrderService {
             isPaid: order.is_paid,
             status: order.status,
             notes: order.notes,
+            // NEW
+            scheduledAt: order.scheduled_at,
+            rescheduleReason: order.reschedule_reason,
+            callbackAt: order.callback_at,
+            callbackComment: order.callback_comment,
             customer: {
                 firstName: order.customer_first_name,
                 lastName: order.customer_last_name,
@@ -274,6 +403,11 @@ class OrderService {
             paymentMethod: order.payment_method,
             isPaid: order.is_paid,
             status: order.status,
+            // NEW
+            scheduledAt: order.scheduled_at,
+            rescheduleReason: order.reschedule_reason,
+            callbackAt: order.callback_at,
+            callbackComment: order.callback_comment,
             customer: {
                 city: order.customer_city,
                 state: order.customer_state

@@ -57,7 +57,6 @@ class OrderRepository {
     }
 
     async findAll(filters = {}) {
-        // Build the count query separately from the data query
         let countQuery = db('orders')
             .join('customers', 'orders.customer_id', 'customers.id');
 
@@ -73,7 +72,6 @@ class OrderRepository {
                 'sales_rep.first_name as sales_rep_first_name', 'sales_rep.last_name as sales_rep_last_name'
             );
 
-        // Apply filters to both queries
         if (filters.status) {
             countQuery = countQuery.where('orders.status', filters.status);
             dataQuery = dataQuery.where('orders.status', filters.status);
@@ -132,6 +130,51 @@ class OrderRepository {
         return updated;
     }
 
+    // ==========================================
+    // RESCHEDULE
+    // ==========================================
+    async reschedule(id, { scheduledAt, reason, userId }) {
+        const updateData = {
+            scheduled_at: scheduledAt,
+            reschedule_reason: reason || null,
+            rescheduled_by: userId,
+            updated_at: new Date()
+        };
+
+        // Move status back to 'assigned' if it was progressed, so rep can re-confirm
+        // (optional — remove if you want to keep the current status)
+        const [updated] = await db('orders')
+            .where({ id })
+            .update(updateData)
+            .returning('*');
+
+        if (!updated) throw new Error('Order not found');
+
+        // Return with joined fields so the formatter has everything
+        return this.findById(id);
+    }
+
+    // ==========================================
+    // CALLBACK
+    // ==========================================
+    async scheduleCallback(id, { callbackAt, comment, userId }) {
+        const updateData = {
+            callback_at: callbackAt,
+            callback_comment: comment,
+            callback_set_by: userId,
+            updated_at: new Date()
+        };
+
+        const [updated] = await db('orders')
+            .where({ id })
+            .update(updateData)
+            .returning('*');
+
+        if (!updated) throw new Error('Order not found');
+
+        return this.findById(id);
+    }
+
     async getUnassignedOrders() {
         return db('orders')
             .join('customers', 'orders.customer_id', 'customers.id')
@@ -167,6 +210,32 @@ class OrderRepository {
                 db.raw("COALESCE(SUM(total_amount) FILTER (WHERE status IN ('delivered', 'completed')), 0)::float as total_revenue")
             )
             .first();
+    }
+
+    // ==========================================
+    // CALLBACKS DUE (for dashboard widgets)
+    // ==========================================
+    async getDueCallbacks(salesRepId = null) {
+        let query = db('orders')
+            .join('customers', 'orders.customer_id', 'customers.id')
+            .join('products', 'orders.product_id', 'products.id')
+            .whereNotNull('orders.callback_at')
+            .where('orders.callback_at', '<=', db.fn.now())
+            .whereNotIn('orders.status', ['delivered', 'completed', 'cancelled'])
+            .select(
+                'orders.*',
+                'products.name as product_name',
+                'customers.first_name as customer_first_name',
+                'customers.last_name as customer_last_name',
+                'customers.phone as customer_phone'
+            )
+            .orderBy('orders.callback_at', 'asc');
+
+        if (salesRepId) {
+            query = query.where('orders.sales_rep_id', salesRepId);
+        }
+
+        return query;
     }
 }
 

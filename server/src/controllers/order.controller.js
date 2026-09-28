@@ -121,6 +121,100 @@ class OrderController {
         }
     }
 
+    // ==========================================
+    // RESCHEDULE
+    // ==========================================
+    async rescheduleOrder(req, res, next) {
+        try {
+            const { scheduledAt, reason } = req.body;
+
+            const order = await orderService.rescheduleOrder(
+                req.params.id,
+                { scheduledAt, reason },
+                req.user.id,
+                req.user.role
+            );
+
+            res.json({
+                success: true,
+                message: 'Order rescheduled successfully',
+                data: order
+            });
+        } catch (error) {
+            if (error.message === 'Order not found') {
+                return res.status(404).json({ success: false, message: error.message });
+            }
+            if (error.message.includes('only reschedule your')) {
+                return res.status(403).json({ success: false, message: error.message });
+            }
+            if (
+                error.message.includes('Cannot reschedule') ||
+                error.message.includes('required') ||
+                error.message.includes('Invalid') ||
+                error.message.includes('must be in the future')
+            ) {
+                return res.status(400).json({ success: false, message: error.message });
+            }
+            next(error);
+        }
+    }
+
+    // ==========================================
+    // CALLBACK
+    // ==========================================
+    async scheduleCallback(req, res, next) {
+        try {
+            const { callbackAt, comment } = req.body;
+
+            const order = await orderService.scheduleCallback(
+                req.params.id,
+                { callbackAt, comment },
+                req.user.id,
+                req.user.role
+            );
+
+            res.json({
+                success: true,
+                message: 'Callback scheduled successfully',
+                data: order
+            });
+        } catch (error) {
+            if (error.message === 'Order not found') {
+                return res.status(404).json({ success: false, message: error.message });
+            }
+            if (error.message.includes('only schedule callbacks for your')) {
+                return res.status(403).json({ success: false, message: error.message });
+            }
+            if (
+                error.message.includes('Cannot schedule') ||
+                error.message.includes('required') ||
+                error.message.includes('Invalid') ||
+                error.message.includes('must be in the future') ||
+                error.message.includes('1000 characters')
+            ) {
+                return res.status(400).json({ success: false, message: error.message });
+            }
+            next(error);
+        }
+    }
+
+    // Sales reps: get their own due callbacks
+    async getMyCallbacks(req, res, next) {
+        try {
+            const callbacks = await orderService.getCallbacks(
+                req.user.id,
+                req.user.role
+            );
+
+            res.json({
+                success: true,
+                data: callbacks
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // Admin - Assign orders to sales reps
     async assignOrders(req, res, next) {
         try {

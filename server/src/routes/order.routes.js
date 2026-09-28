@@ -36,4 +36,8 @@ router.patch(
     orderController.updateOrderStatus
 );
 
+router.put('/:id/reschedule', authenticate, authorize('sales_rep', 'admin'), orderController.rescheduleOrder);
+router.post('/:id/callback', authenticate, authorize('sales_rep', 'admin'), orderController.scheduleCallback);
+router.get('/callbacks/due', authenticate, authorize('sales_rep', 'admin'), orderController.getMyCallbacks);
+
 module.exports = router;
