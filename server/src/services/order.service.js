@@ -237,6 +237,42 @@ class OrderService {
         }
     }
 
+    // ==========================================
+    // LOG ISSUE
+    // ==========================================
+    async logIssue(id, type, userId, userRole) {
+        try {
+            const order = await orderRepository.findById(id);
+
+            if (!order) {
+                throw new Error('Order not found');
+            }
+
+            if (userRole === 'sales_rep' && order.sales_rep_id !== userId) {
+                throw new Error('You can only log issues for your assigned orders');
+            }
+
+            if (!['switched_off', 'not_answering'].includes(type)) {
+                throw new Error('Invalid issue type');
+            }
+
+            const updated = await orderRepository.logIssue(id, type, userId);
+
+            logger.info('Issue logged', {
+                orderId: id,
+                type,
+                updatedBy: userId
+            });
+
+            return userRole === 'sales_rep'
+                ? this.formatOrderForSalesRep(updated)
+                : this.formatOrder(updated);
+        } catch (error) {
+            logger.error('Log issue service error', { error: error.message, orderId: id });
+            throw error;
+        }
+    }
+
     async assignOrdersToSalesReps() {
         try {
             const unassignedOrders = await orderRepository.getUnassignedOrders();
@@ -374,6 +410,10 @@ class OrderService {
             rescheduleReason: order.reschedule_reason,
             callbackAt: order.callback_at,
             callbackComment: order.callback_comment,
+            switchedOffAt: order.switched_off_at,
+            notAnsweringAt: order.not_answering_at,
+            switchedOffCount: order.switched_off_count,
+            notAnsweringCount: order.not_answering_count,
             customer: {
                 firstName: order.customer_first_name,
                 lastName: order.customer_last_name,
@@ -408,6 +448,10 @@ class OrderService {
             rescheduleReason: order.reschedule_reason,
             callbackAt: order.callback_at,
             callbackComment: order.callback_comment,
+            switchedOffAt: order.switched_off_at,
+            notAnsweringAt: order.not_answering_at,
+            switchedOffCount: order.switched_off_count,
+            notAnsweringCount: order.not_answering_count,
             customer: {
                 city: order.customer_city,
                 state: order.customer_state

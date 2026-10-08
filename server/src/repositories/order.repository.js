@@ -175,6 +175,27 @@ class OrderRepository {
         return this.findById(id);
     }
 
+    // ==========================================
+    // LOG ISSUE
+    // ==========================================
+    async logIssue(id, type, userId) {
+        const field = type === 'switched_off' ? 'switched_off_at' : 'not_answering_at';
+        const countField = type === 'switched_off' ? 'switched_off_count' : 'not_answering_count';
+
+        const [updated] = await db('orders')
+            .where({ id })
+            .update({
+                [field]: new Date(),
+                [countField]: db.raw(`COALESCE(${countField}, 0) + 1`),
+                updated_at: new Date()
+            })
+            .returning('*');
+
+        if (!updated) throw new Error('Order not found');
+
+        return this.findById(id);
+    }
+
     async getUnassignedOrders() {
         return db('orders')
             .join('customers', 'orders.customer_id', 'customers.id')

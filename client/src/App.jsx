@@ -103,6 +103,27 @@ function App() {
                                         <Route path="settings" element={<SettingsPlaceholder />} />
                                     </Route>
 
+                                    {/* Inventory Manager Routes */}
+                                    <Route path="/inventory-manager/dashboard" element={
+                                        <ProtectedRoute roles={['inventory_manager', 'admin']}>
+                                            <AdminLayout />
+                                        </ProtectedRoute>
+                                    }>
+                                        <Route index element={<AdminOverview />} />
+                                        <Route path="products" element={<ProductManagement />} />
+                                        <Route path="products/:id" element={<ProductDetail />} />
+                                    </Route>
+
+                                    {/* Head of Sales Routes */}
+                                    <Route path="/head-of-sales/dashboard" element={
+                                        <ProtectedRoute roles={['head_of_sales', 'admin']}>
+                                            <AdminLayout />
+                                        </ProtectedRoute>
+                                    }>
+                                        <Route index element={<AdminOverview />} />
+                                        <Route path="sales-reps" element={<SalesRepManagement />} />
+                                    </Route>
+
                                     {/* Sales Rep Routes - Requires authentication + sales_rep role */}
                                     <Route path="/sales-rep/dashboard" element={
                                         <ProtectedRoute roles={['sales_rep', 'admin']}>

@@ -11,43 +11,7 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 
-const navigation = [
-    {
-        section: 'DASHBOARD',
-        items: [
-            { path: '/admin/dashboard', icon: Home, label: 'Home', end: true },
-            { path: '/admin/dashboard/analytics', icon: Activity, label: 'Analytics' },
-        ]
-    },
-    {
-        section: 'OPERATIONS',
-        items: [
-            { path: '/admin/dashboard/products', icon: Package, label: 'Products' },
-            { path: '/admin/dashboard/orders', icon: ShoppingCart, label: 'Orders' },
-            { path: '/admin/dashboard/ads', icon: Megaphone, label: 'Marketing' },
-        ]
-    },
-    {
-        section: 'PEOPLE',
-        items: [
-            { path: '/admin/dashboard/sales-reps', icon: UserCheck, label: 'Sales Team' },
-            { path: '/admin/dashboard/dispatch', icon: Truck, label: 'Dispatch' },
-        ]
-    },
-    {
-        section: 'FINANCE',
-        items: [
-            { path: '/admin/dashboard/commissions', icon: Percent, label: 'Commissions' },
-            { path: '/admin/dashboard/payments', icon: DollarSign, label: 'Payments' },
-        ]
-    },
-    {
-        section: 'SYSTEM',
-        items: [
-            { path: '/admin/dashboard/settings', icon: Settings, label: 'Settings' },
-        ]
-    },
-];
+
 
 const AdminLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -72,6 +36,80 @@ const AdminLayout = () => {
         { id: 4, text: 'Dispatch partner verified', time: '3h ago', unread: false, type: 'info' },
     ];
     const unreadCount = notifications.filter(n => n.unread).length;
+
+    const getNavigation = () => {
+        if (user?.role === 'inventory_manager') {
+            return [
+                {
+                    section: 'DASHBOARD',
+                    items: [
+                        { path: '/inventory-manager/dashboard', icon: Home, label: 'Home', end: true }
+                    ]
+                },
+                {
+                    section: 'OPERATIONS',
+                    items: [
+                        { path: '/inventory-manager/dashboard/products', icon: Package, label: 'Products' }
+                    ]
+                }
+            ];
+        }
+        if (user?.role === 'head_of_sales') {
+            return [
+                {
+                    section: 'DASHBOARD',
+                    items: [
+                        { path: '/head-of-sales/dashboard', icon: Home, label: 'Home', end: true }
+                    ]
+                },
+                {
+                    section: 'PEOPLE',
+                    items: [
+                        { path: '/head-of-sales/dashboard/sales-reps', icon: UserCheck, label: 'Sales Team' }
+                    ]
+                }
+            ];
+        }
+        return [
+            {
+                section: 'DASHBOARD',
+                items: [
+                    { path: '/admin/dashboard', icon: Home, label: 'Home', end: true },
+                    { path: '/admin/dashboard/analytics', icon: Activity, label: 'Analytics' },
+                ]
+            },
+            {
+                section: 'OPERATIONS',
+                items: [
+                    { path: '/admin/dashboard/products', icon: Package, label: 'Products' },
+                    { path: '/admin/dashboard/orders', icon: ShoppingCart, label: 'Orders' },
+                    { path: '/admin/dashboard/ads', icon: Megaphone, label: 'Marketing' },
+                ]
+            },
+            {
+                section: 'PEOPLE',
+                items: [
+                    { path: '/admin/dashboard/sales-reps', icon: UserCheck, label: 'Sales Team' },
+                    { path: '/admin/dashboard/dispatch', icon: Truck, label: 'Dispatch' },
+                ]
+            },
+            {
+                section: 'FINANCE',
+                items: [
+                    { path: '/admin/dashboard/commissions', icon: Percent, label: 'Commissions' },
+                    { path: '/admin/dashboard/payments', icon: DollarSign, label: 'Payments' },
+                ]
+            },
+            {
+                section: 'SYSTEM',
+                items: [
+                    { path: '/admin/dashboard/settings', icon: Settings, label: 'Settings' },
+                ]
+            },
+        ];
+    };
+
+    const navigation = getNavigation();
 
     useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
     useEffect(() => { localStorage.setItem('sidebarCollapsed', sidebarCollapsed); }, [sidebarCollapsed]);

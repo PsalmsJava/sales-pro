@@ -30,7 +30,7 @@ const userValidators = {
         firstName: Joi.string().trim().min(2).max(100).required(),
         lastName: Joi.string().trim().min(2).max(100).required(),
         phone: Joi.string().optional(),
-        role: Joi.string().valid('admin', 'sales_rep', 'dispatch_partner').required()
+        role: Joi.string().valid('admin', 'sales_rep', 'dispatch_partner', 'head_of_sales', 'inventory_manager').required()
     })
 };
 

@@ -14,11 +14,7 @@ const loginSchema = z.object({
     password: z.string().min(1, 'Password is required'),
 });
 
-const roles = [
-    { role: 'admin', email: 'admin@salespro.com', label: 'Admin', color: 'from-brand-600 to-brand-800', icon: '🛡️' },
-    { role: 'sales_rep', email: 'john.smith@salespro.com', label: 'Sales Rep', color: 'from-gold-500 to-gold-600', icon: '💼' },
-    { role: 'dispatch_partner', email: 'dispatch1@speedexlogistics.com', label: 'Dispatch', color: 'from-teal-500 to-teal-600', icon: '🚚' },
-];
+
 
 const LoginPage = () => {
     const { login } = useAuth();
@@ -26,26 +22,24 @@ const LoginPage = () => {
     const { isDark, toggleTheme } = useTheme();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [selectedRole, setSelectedRole] = useState(null);
-
-    const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+    const { register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(loginSchema),
-        defaultValues: { email: 'admin@salespro.com', password: 'Password@123' }
+        defaultValues: { email: '', password: '' }
     });
 
-    const handleQuickLogin = (role) => {
-        setSelectedRole(role.role);
-        setValue('email', role.email);
-        setValue('password', 'Password@123');
-        setSelectedRole(null);
-    };
 
     const onSubmit = async (data) => {
         setIsLoading(true);
         try {
             const result = await login(data.email, data.password);
             toast.success(`Welcome back, ${result.user.firstName}!`);
-            const routes = { admin: '/admin/dashboard', sales_rep: '/sales-rep/dashboard', dispatch_partner: '/dispatch/dashboard' };
+            const routes = {
+                admin: '/admin/dashboard',
+                sales_rep: '/sales-rep/dashboard',
+                dispatch_partner: '/dispatch/dashboard',
+                head_of_sales: '/head-of-sales/dashboard',
+                inventory_manager: '/inventory-manager/dashboard'
+            };
             navigate(routes[result.user.role] || '/login', { replace: true });
         } catch (error) {
             toast.error(error.response?.data?.message || 'Login failed');
@@ -117,17 +111,7 @@ const LoginPage = () => {
                         <p className="text-slate-500 dark:text-slate-400 mt-2">Sign in to your account to continue</p>
                     </div>
 
-                    {/* Quick Role Selection */}
-                    <div className="grid grid-cols-3 gap-2 mb-6">
-                        {roles.map((role) => (
-                            <motion.button key={role.role} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                                onClick={() => handleQuickLogin(role)}
-                                className={`p-3 rounded-xl border-2 text-center transition-all ${selectedRole === role.role ? 'border-brand-500 bg-brand-50 dark:bg-brand-800/30' : 'border-slate-200 dark:border-brand-700 hover:border-slate-300'}`}>
-                                <span className="text-xl block mb-1">{role.icon}</span>
-                                <span className="text-xs font-semibold text-brand-800 dark:text-white">{role.label}</span>
-                            </motion.button>
-                        ))}
-                    </div>
+
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         <div>

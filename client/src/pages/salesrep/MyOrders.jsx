@@ -11,6 +11,7 @@ const filters = [
     { key: 'all', label: 'All Orders' },
     { key: 'callbacks', label: 'Callbacks', icon: Phone },
     { key: 'rescheduled', label: 'Rescheduled', icon: Calendar },
+    { key: 'issues', label: 'Issues', icon: Phone },
 ];
 
 const MyOrders = () => {
@@ -30,11 +31,15 @@ const MyOrders = () => {
         if (activeFilter === 'rescheduled') {
             return allOrders.filter(o => o.scheduledAt);
         }
+        if (activeFilter === 'issues') {
+            return allOrders.filter(o => o.switchedOffAt || o.notAnsweringAt);
+        }
         return allOrders;
     }, [allOrders, activeFilter]);
 
     const callbackCount = allOrders.filter(o => o.callbackAt).length;
     const rescheduledCount = allOrders.filter(o => o.scheduledAt).length;
+    const issuesCount = allOrders.filter(o => o.switchedOffAt || o.notAnsweringAt).length;
 
     const formatDateTime = (value) => {
         if (!value) return '';
@@ -64,7 +69,8 @@ const MyOrders = () => {
                 {filters.map(f => {
                     const count = f.key === 'callbacks' ? callbackCount
                         : f.key === 'rescheduled' ? rescheduledCount
-                            : allOrders.length;
+                            : f.key === 'issues' ? issuesCount
+                                : allOrders.length;
                     const Icon = f.icon;
                     return (
                         <button key={f.key} onClick={() => setActiveFilter(f.key)}
@@ -159,17 +165,24 @@ const MyOrders = () => {
                                                 </p>
                                             )}
 
-                                            {/* Reschedule reason preview */}
                                             {hasReschedule && order.rescheduleReason && (
                                                 <p className="text-xs text-slate-500 mt-1.5 italic line-clamp-1">
                                                     Reason: {order.rescheduleReason}
                                                 </p>
                                             )}
+
+                                            {/* Switched Off / Not Answering */}
+                                            {(order.switchedOffAt || order.notAnsweringAt) && (
+                                                <div className="flex gap-2 mt-2">
+                                                    {order.switchedOffAt && <span className="text-xs text-rose-500 font-medium">Switched Off ({order.switchedOffCount || 1}x) - {formatDateTime(order.switchedOffAt)}</span>}
+                                                    {order.notAnsweringAt && <span className="text-xs text-rose-500 font-medium">Not Answering ({order.notAnsweringCount || 1}x) - {formatDateTime(order.notAnsweringAt)}</span>}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
                                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                                        <span className="font-bold text-brand-800 dark:text-white">${order.totalAmount?.toFixed(2)}</span>
+                                        <span className="font-bold text-brand-800 dark:text-white">₦{order.totalAmount?.toFixed(2)}</span>
                                         <StatusBadge status={order.status} size="sm" />
                                     </div>
                                 </div>

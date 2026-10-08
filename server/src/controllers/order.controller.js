@@ -198,6 +198,37 @@ class OrderController {
         }
     }
 
+    // ==========================================
+    // LOG ISSUE (Switched Off / Not Answering)
+    // ==========================================
+    async logIssue(req, res, next) {
+        try {
+            const { type } = req.body;
+            const order = await orderService.logIssue(
+                req.params.id,
+                type,
+                req.user.id,
+                req.user.role
+            );
+            res.json({
+                success: true,
+                message: `Logged ${type} successfully`,
+                data: order
+            });
+        } catch (error) {
+            if (error.message === 'Order not found') {
+                return res.status(404).json({ success: false, message: error.message });
+            }
+            if (error.message.includes('only log issues for your')) {
+                return res.status(403).json({ success: false, message: error.message });
+            }
+            if (error.message.includes('Invalid issue type')) {
+                return res.status(400).json({ success: false, message: error.message });
+            }
+            next(error);
+        }
+    }
+
     // Sales reps: get their own due callbacks
     async getMyCallbacks(req, res, next) {
         try {

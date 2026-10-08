@@ -71,6 +71,16 @@ const OrdersQueue = () => {
         onError: (error) => toast.error(error.response?.data?.message || 'Failed to schedule callback')
     });
 
+    const issueMutation = useMutation({
+        mutationFn: ({ orderId, type }) =>
+            orderService.logIssue(orderId, type),
+        onSuccess: () => {
+            toast.success('Issue logged successfully');
+            queryClient.invalidateQueries(['sales-rep-orders']);
+        },
+        onError: (error) => toast.error(error.response?.data?.message || 'Failed to log issue')
+    });
+
     const openReschedule = (order) => {
         setRescheduleOrder(order);
         setRescheduleDate('');
@@ -187,7 +197,7 @@ const OrdersQueue = () => {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-2xl font-bold text-brand-800 dark:text-white">${order.totalAmount?.toFixed(2)}</p>
+                                    <p className="text-2xl font-bold text-brand-800 dark:text-white">₦{order.totalAmount?.toFixed(2)}</p>
                                     <p className="text-sm text-slate-500">{new Date(order.createdAt).toLocaleDateString()}</p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
@@ -204,6 +214,16 @@ const OrdersQueue = () => {
                                     <button onClick={() => openCallback(order)}
                                         className="px-4 py-2 bg-white dark:bg-brand-800 border border-slate-300 dark:border-brand-600 text-slate-700 dark:text-slate-300 rounded-xl font-medium text-sm flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-brand-700 transition">
                                         <Phone className="w-4 h-4" /> Callback
+                                    </button>
+                                    <button onClick={() => issueMutation.mutate({ orderId: order.id, type: 'switched_off' })}
+                                        disabled={issueMutation.isLoading}
+                                        className="px-4 py-2 bg-white dark:bg-brand-800 border border-slate-300 dark:border-brand-600 text-slate-700 dark:text-slate-300 rounded-xl font-medium text-sm hover:bg-slate-50 dark:hover:bg-brand-700 transition">
+                                        Switched Off
+                                    </button>
+                                    <button onClick={() => issueMutation.mutate({ orderId: order.id, type: 'not_answering' })}
+                                        disabled={issueMutation.isLoading}
+                                        className="px-4 py-2 bg-white dark:bg-brand-800 border border-slate-300 dark:border-brand-600 text-slate-700 dark:text-slate-300 rounded-xl font-medium text-sm hover:bg-slate-50 dark:hover:bg-brand-700 transition">
+                                        Not Answering
                                     </button>
                                 </div>
                             </div>
