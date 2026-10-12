@@ -63,9 +63,10 @@ const AdminLayout = () => {
                     ]
                 },
                 {
-                    section: 'PEOPLE',
+                    section: 'SALES & TEAM',
                     items: [
-                        { path: '/head-of-sales/dashboard/sales-reps', icon: UserCheck, label: 'Sales Team' }
+                        { path: '/head-of-sales/dashboard/sales-reps', icon: UserCheck, label: 'Sales Team' },
+                        { path: '/head-of-sales/dashboard/orders', icon: ShoppingCart, label: 'Orders & Sales' }
                     ]
                 }
             ];

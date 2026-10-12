@@ -1,7 +1,7 @@
 services:
 - type: web
   name: salespro-api
-  env: node
+  runtime: node
   region: oregon
   plan: free
   buildCommand: cd server && npm install
@@ -25,7 +25,7 @@ services:
     fromService:
       name: salespro-client
       type: web
-      property: url
+      envVarKey: RENDER_EXTERNAL_URL
   - key: PAYSTACK_SECRET_KEY
     sync: false
   - key: PAYSTACK_PUBLIC_KEY
@@ -39,9 +39,7 @@ services:
 
 - type: web
   name: salespro-client
-  env: static
-  region: oregon
-  plan: free
+  runtime: static
   buildCommand: cd client && npm install && npm run build
   staticPublishPath: ./client/build
   routes:
@@ -53,7 +51,7 @@ services:
     fromService:
       name: salespro-api
       type: web
-      property: url
+      envVarKey: RENDER_EXTERNAL_URL
   - key: REACT_APP_PAYSTACK_KEY
     sync: false
   - key: REACT_APP_FLUTTERWAVE_KEY

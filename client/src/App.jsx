@@ -33,6 +33,7 @@ const DispatchDetails = lazy(() => import('./pages/dispatch/DispatchDetails'));
 const CustomerOrderPage = lazy(() => import('./pages/customer/OrderPage'));
 const DispatchRegisterPage = lazy(() => import('./pages/dispatch/RegisterPage'));
 const ProductDetail = lazy(() => import('./pages/admin/ProductDetail'));
+const InventoryOverview = lazy(() => import('./pages/inventory/InventoryOverview'));
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -109,7 +110,7 @@ function App() {
                                             <AdminLayout />
                                         </ProtectedRoute>
                                     }>
-                                        <Route index element={<AdminOverview />} />
+                                        <Route index element={<InventoryOverview />} />
                                         <Route path="products" element={<ProductManagement />} />
                                         <Route path="products/:id" element={<ProductDetail />} />
                                     </Route>
@@ -122,6 +123,7 @@ function App() {
                                     }>
                                         <Route index element={<AdminOverview />} />
                                         <Route path="sales-reps" element={<SalesRepManagement />} />
+                                        <Route path="orders" element={<OrderManagement />} />
                                     </Route>
 
                                     {/* Sales Rep Routes - Requires authentication + sales_rep role */}

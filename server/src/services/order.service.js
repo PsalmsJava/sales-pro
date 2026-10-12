@@ -379,6 +379,7 @@ class OrderService {
 
         const roleTransitions = {
             admin: ['pending', 'assigned', 'confirmed', 'processing', 'dispatched', 'delivered', 'completed', 'cancelled'],
+            head_of_sales: ['pending', 'assigned', 'confirmed', 'processing', 'dispatched', 'delivered', 'completed', 'cancelled'],
             sales_rep: ['confirmed', 'processing', 'cancelled'],
             dispatch_partner: ['dispatched', 'delivered']
         };
@@ -405,7 +406,7 @@ class OrderService {
             isPaid: order.is_paid,
             status: order.status,
             notes: order.notes,
-            // NEW
+            // Tracking / scheduling
             scheduledAt: order.scheduled_at,
             rescheduleReason: order.reschedule_reason,
             callbackAt: order.callback_at,
@@ -436,6 +437,7 @@ class OrderService {
     formatOrderForSalesRep(order) {
         return {
             id: order.id,
+            productId: order.product_id,
             productName: order.product_name,
             productImage: order.product_image,
             quantity: order.quantity,
@@ -443,7 +445,8 @@ class OrderService {
             paymentMethod: order.payment_method,
             isPaid: order.is_paid,
             status: order.status,
-            // NEW
+            notes: order.notes,
+            // Tracking / scheduling
             scheduledAt: order.scheduled_at,
             rescheduleReason: order.reschedule_reason,
             callbackAt: order.callback_at,
@@ -453,6 +456,10 @@ class OrderService {
             switchedOffCount: order.switched_off_count,
             notAnsweringCount: order.not_answering_count,
             customer: {
+                firstName: order.customer_first_name,
+                lastName: order.customer_last_name,
+                phone: order.customer_phone,
+                address: order.customer_address,
                 city: order.customer_city,
                 state: order.customer_state
             },

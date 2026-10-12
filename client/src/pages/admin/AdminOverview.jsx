@@ -56,7 +56,7 @@ const AdminOverview = () => {
     ];
 
     const statCards = [
-        { label: 'Total Revenue', value: `$${(stats.totalRevenue || 0).toLocaleString()}`, icon: DollarSign, color: 'emerald', trend: 8.2 },
+        { label: 'Total Revenue', value: `₦${(stats.totalRevenue || 0).toLocaleString()}`, icon: DollarSign, color: 'emerald', trend: 8.2 },
         { label: 'Total Orders', value: stats.totalOrders || 0, icon: ShoppingCart, color: 'navy', trend: 12.5 },
         { label: 'Active Products', value: stats.totalProducts || 0, icon: Package, color: 'teal', subtitle: `${lowStockProducts} low stock` },
         { label: 'Sales Reps', value: stats.totalSalesReps || 0, icon: Users, color: 'gold', trend: 5.1 },
@@ -110,13 +110,13 @@ const AdminOverview = () => {
                     <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                         whileHover={{ y: -2 }}
                         className={`relative overflow-hidden rounded-2xl border p-5 ${insight.type === 'warning' ? 'bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800' :
-                                insight.type === 'success' ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800' :
-                                    'bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800'
+                            insight.type === 'success' ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800' :
+                                'bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800'
                             }`}>
                         <div className="flex items-start gap-3">
                             <div className={`p-2 rounded-xl ${insight.type === 'warning' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
-                                    insight.type === 'success' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' :
-                                        'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
+                                insight.type === 'success' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' :
+                                    'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
                                 }`}>
                                 <insight.icon className="w-5 h-5" />
                             </div>
@@ -167,7 +167,7 @@ const AdminOverview = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <span className="text-sm font-bold text-brand-800 dark:text-white">${order.totalAmount?.toFixed(2)}</span>
+                                        <span className="text-sm font-bold text-brand-800 dark:text-white">₦{order.totalAmount?.toFixed(2)}</span>
                                         <StatusBadge status={order.status} size="sm" />
                                     </div>
                                 </motion.div>
@@ -193,8 +193,8 @@ const AdminOverview = () => {
                                         <div className="w-20 h-2 bg-slate-100 dark:bg-brand-800 rounded-full overflow-hidden">
                                             <motion.div initial={{ width: 0 }} animate={{ width: `${(item.count / Math.max(...ordersByStatus.map(o => o.count))) * 100}%` }}
                                                 className={`h-full rounded-full ${item.status === 'delivered' ? 'bg-emerald-500' :
-                                                        item.status === 'cancelled' ? 'bg-rose-500' :
-                                                            item.status === 'pending' ? 'bg-amber-500' : 'bg-brand-500'
+                                                    item.status === 'cancelled' ? 'bg-rose-500' :
+                                                        item.status === 'pending' ? 'bg-amber-500' : 'bg-brand-500'
                                                     }`} />
                                         </div>
                                         <span className="text-sm font-bold text-brand-800 dark:text-white w-8 text-right">{item.count}</span>

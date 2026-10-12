@@ -7,11 +7,7 @@ const RUNTIME_CACHE = 'salespro-runtime-v1';
 const PRECACHE_ASSETS = [
     '/',
     '/index.html',
-    '/static/js/bundle.js',
-    '/static/css/main.css',
     '/manifest.json',
-    '/icons/icon-192x192.png',
-    '/icons/icon-512x512.png',
     '/offline.html'
 ];
 
@@ -21,7 +17,13 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('[ServiceWorker] Precaching assets');
-                return cache.addAll(PRECACHE_ASSETS);
+                return Promise.all(
+                    PRECACHE_ASSETS.map((url) =>
+                        cache.add(url).catch(() => {
+                            console.warn('[ServiceWorker] Skipping precache:', url);
+                        })
+                    )
+                );
             })
             .then(() => {
                 console.log('[ServiceWorker] Skip waiting');
@@ -105,6 +107,28 @@ const strategies = {
     }
 };
 
+// Network first for SPA navigations so client routes always get a fresh index.html
+const navigationNetworkFirst = async (request) => {
+    try {
+        const networkResponse = await fetch(request);
+        if (networkResponse.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put('/index.html', networkResponse.clone());
+        }
+        return networkResponse;
+    } catch (error) {
+        const cachedIndex = await caches.match('/index.html');
+        if (cachedIndex) {
+            return cachedIndex;
+        }
+        const offlinePage = await caches.match('/offline.html');
+        if (offlinePage) {
+            return offlinePage;
+        }
+        throw error;
+    }
+};
+
 // Fetch event - handle requests
 self.addEventListener('fetch', (event) => {
     const { request } = event;
@@ -121,13 +145,18 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static assets and navigation - cache first
+    // SPA navigations - network first with offline fallback
+    if (request.mode === 'navigate') {
+        event.respondWith(navigationNetworkFirst(request));
+        return;
+    }
+
+    // Static assets - cache first
     if (
         request.destination === 'style' ||
         request.destination === 'script' ||
         request.destination === 'image' ||
-        request.destination === 'font' ||
-        request.mode === 'navigate'
+        request.destination === 'font'
     ) {
         event.respondWith(strategies.cacheFirst(request));
         return;

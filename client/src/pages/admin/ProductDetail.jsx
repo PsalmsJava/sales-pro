@@ -12,6 +12,7 @@ import productService from '../../services/productService';
 import StatCard from '../../components/ui/StatCard';
 import SectionCard from '../../components/ui/SectionCard';
 import StatusBadge from '../../components/ui/StatusBadge';
+import { useAuth } from '../../context/AuthContext';
 
 // Mock analytics data for the product
 const generateProductAnalytics = (product) => {
@@ -61,7 +62,9 @@ const generateProductAnalytics = (product) => {
 const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [showAllCities, setShowAllCities] = useState(false);
+    const backUrl = user?.role === 'inventory_manager' ? '/inventory-manager/dashboard/products' : '/admin/dashboard/products';
 
     const { data: product, isLoading } = useQuery({
         queryKey: ['product', id],
@@ -94,7 +97,7 @@ const ProductDetail = () => {
         <div className="space-y-6">
             {/* Back Button & Actions */}
             <div className="flex items-center justify-between">
-                <button onClick={() => navigate('/admin/dashboard/products')}
+                <button onClick={() => navigate(backUrl)}
                     className="flex items-center gap-2 text-slate-500 hover:text-brand-600 dark:hover:text-gold-400 transition-colors font-medium text-sm">
                     <ArrowLeft className="w-4 h-4" /> Back to Products
                 </button>
@@ -128,7 +131,7 @@ const ProductDetail = () => {
                         <h1 className="text-3xl font-extrabold">{product.name}</h1>
                         <p className="text-brand-200 mt-2 max-w-2xl">{product.description || 'No description available.'}</p>
                         <div className="flex items-end gap-4 mt-4">
-                            <span className="text-4xl font-extrabold">${product.price?.toFixed(2)}</span>
+                            <span className="text-4xl font-extrabold">₦{product.price?.toFixed(2)}</span>
                             <span className="text-brand-200">per unit</span>
                             <span className="text-brand-200">•</span>
                             <span className="text-brand-200">{product.quantity} in stock</span>
@@ -140,8 +143,8 @@ const ProductDetail = () => {
             {/* KPI Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <StatCard label="Total Sold" value={analytics?.totalSold || 0} icon={ShoppingCart} color="navy" />
-                <StatCard label="Total Revenue" value={`$${(analytics?.totalRevenue || 0).toLocaleString()}`} icon={DollarSign} color="emerald" />
-                <StatCard label="Avg Order Value" value={`$${(analytics?.avgOrderValue || 0).toFixed(2)}`} icon={Target} color="gold" />
+                <StatCard label="Total Revenue" value={`₦${(analytics?.totalRevenue || 0).toLocaleString()}`} icon={DollarSign} color="emerald" />
+                <StatCard label="Avg Order Value" value={`₦${(analytics?.avgOrderValue || 0).toFixed(2)}`} icon={Target} color="gold" />
                 <StatCard label="Conversion Rate" value={`${analytics?.conversionRate || 0}%`} icon={TrendingUp} color="teal" />
                 <StatCard label="Return Rate" value={`${analytics?.returnRate || 0}%`} icon={AlertTriangle} color="rose" />
             </div>
@@ -162,7 +165,7 @@ const ProductDetail = () => {
                                     <span className="text-xs text-white font-medium">{month.sales} units</span>
                                 </motion.div>
                             </div>
-                            <span className="text-xs font-bold text-brand-800 dark:text-white w-24 text-right">${month.revenue.toLocaleString()}</span>
+                            <span className="text-xs font-bold text-brand-800 dark:text-white w-24 text-right">₦{month.revenue.toLocaleString()}</span>
                         </div>
                     ))}
                 </div>
@@ -200,7 +203,7 @@ const ProductDetail = () => {
                                         <p className="text-xs text-slate-500">{rep.orders} orders</p>
                                     </div>
                                 </div>
-                                <span className="font-bold text-sm">${rep.revenue.toLocaleString()}</span>
+                                <span className="font-bold text-sm">₦{rep.revenue.toLocaleString()}</span>
                             </div>
                         ))}
                     </div>
@@ -245,7 +248,7 @@ const ProductDetail = () => {
                                     <td className="px-4 py-3 text-sm">{order.customer}</td>
                                     <td className="px-4 py-3 text-sm text-slate-500">{order.city}</td>
                                     <td className="px-4 py-3 text-sm text-right">{order.quantity}</td>
-                                    <td className="px-4 py-3 text-sm font-bold text-right">${order.total.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-sm font-bold text-right">₦{order.total.toFixed(2)}</td>
                                     <td className="px-4 py-3 text-center"><StatusBadge status={order.status} size="sm" /></td>
                                     <td className="px-4 py-3 text-xs text-slate-500 text-right">{order.date.toLocaleDateString()}</td>
                                 </tr>

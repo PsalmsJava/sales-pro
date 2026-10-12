@@ -10,9 +10,28 @@ class User {
     }
 
     static async findByEmail(email) {
-        return db(this.tableName)
-            .where({ email })
+        if (!email) return null;
+        const normalized = email.toLowerCase().trim();
+        let user = await db(this.tableName)
+            .whereRaw('LOWER(email) = ?', [normalized])
             .first();
+
+        if (!user) {
+            let alternateEmail = null;
+            if (normalized.endsWith('@sales-pro.com')) {
+                alternateEmail = normalized.replace('@sales-pro.com', '@salespro.com');
+            } else if (normalized.endsWith('@salespro.com')) {
+                alternateEmail = normalized.replace('@salespro.com', '@sales-pro.com');
+            }
+
+            if (alternateEmail) {
+                user = await db(this.tableName)
+                    .whereRaw('LOWER(email) = ?', [alternateEmail])
+                    .first();
+            }
+        }
+
+        return user;
     }
 
     static async create(userData) {

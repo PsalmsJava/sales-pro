@@ -32,9 +32,9 @@ const DispatchOverview = () => {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard label="Active" value={data?.activeDeliveries || 0} icon={Truck} color="teal" loading={isLoading} />
-                <StatCard label="Earnings" value={`$${(data?.totalEarnings || 0).toLocaleString()}`} icon={DollarSign} color="emerald" loading={isLoading} />
-                <StatCard label="Pending" value={`$${(data?.pendingEarnings || 0).toLocaleString()}`} icon={Clock} color="gold" loading={isLoading} />
-                <StatCard label="Paid" value={`$${(data?.paidEarnings || 0).toLocaleString()}`} icon={CheckCircle} color="navy" loading={isLoading} />
+                <StatCard label="Earnings" value={`₦${(data?.totalEarnings || 0).toLocaleString()}`} icon={DollarSign} color="emerald" loading={isLoading} />
+                <StatCard label="Pending" value={`₦${(data?.pendingEarnings || 0).toLocaleString()}`} icon={Clock} color="gold" loading={isLoading} />
+                <StatCard label="Paid" value={`₦${(data?.paidEarnings || 0).toLocaleString()}`} icon={CheckCircle} color="navy" loading={isLoading} />
             </div>
 
             <SectionCard title="Recent Assignments" subtitle="Latest delivery tasks">
@@ -54,7 +54,7 @@ const DispatchOverview = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    {a.deliveryFee > 0 && <span className="text-sm font-bold">${a.deliveryFee?.toFixed(2)}</span>}
+                                    {a.deliveryFee > 0 && <span className="text-sm font-bold">₦{a.deliveryFee?.toFixed(2)}</span>}
                                     <StatusBadge status={a.status} size="sm" />
                                 </div>
                             </motion.div>

@@ -57,8 +57,8 @@ const AssignedDeliveries = () => {
                         <motion.div key={delivery.id || idx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
                             className="bg-white dark:bg-brand-900 rounded-2xl border border-slate-200 dark:border-brand-700 shadow-card overflow-hidden">
                             <div className={`h-1.5 bg-gradient-to-r ${delivery.status === 'assigned' ? 'from-brand-600 to-brand-800' :
-                                    delivery.status === 'picked_up' ? 'from-gold-400 to-gold-600' :
-                                        'from-teal-500 to-teal-700'
+                                delivery.status === 'picked_up' ? 'from-gold-400 to-gold-600' :
+                                    'from-teal-500 to-teal-700'
                                 }`} />
                             <div className="p-5">
                                 <div className="flex flex-col lg:flex-row gap-4">
@@ -78,7 +78,7 @@ const AssignedDeliveries = () => {
                                     </div>
                                     <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between gap-3">
                                         {delivery.deliveryFee > 0 && (
-                                            <span className="text-xl font-bold text-brand-800 dark:text-white">${delivery.deliveryFee?.toFixed(2)}</span>
+                                            <span className="text-xl font-bold text-brand-800 dark:text-white">₦{delivery.deliveryFee?.toFixed(2)}</span>
                                         )}
                                         {getNextAction(delivery.status) && (
                                             <button

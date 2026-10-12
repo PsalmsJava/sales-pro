@@ -14,8 +14,11 @@ import SectionCard from '../../components/ui/SectionCard';
 import StatusBadge from '../../components/ui/StatusBadge';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
+import { useAuth } from '../../context/AuthContext';
 
 const ProductManagement = () => {
+    const { user } = useAuth();
+    const canDelete = user?.role === 'admin';
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState('grid');
@@ -99,10 +102,10 @@ const ProductManagement = () => {
             {/* KPI Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <StatCard label="Total Products" value={stats.total} icon={Package} color="navy" loading={isLoading} />
-                <StatCard label="Inventory Value" value={`$${stats.totalValue.toLocaleString()}`} icon={DollarSign} color="emerald" loading={isLoading} />
+                <StatCard label="Inventory Value" value={`₦${stats.totalValue.toLocaleString()}`} icon={DollarSign} color="emerald" loading={isLoading} />
                 <StatCard label="Low Stock" value={stats.lowStock} icon={AlertTriangle} color="gold" loading={isLoading} />
                 <StatCard label="Out of Stock" value={stats.outOfStock} icon={TrendingUp} color="rose" loading={isLoading} />
-                <StatCard label="Avg Price" value={`$${stats.avgPrice.toFixed(2)}`} icon={BarChart3} color="teal" loading={isLoading} />
+                <StatCard label="Avg Price" value={`₦${stats.avgPrice.toFixed(2)}`} icon={BarChart3} color="teal" loading={isLoading} />
             </div>
 
             {/* Toolbar */}
@@ -158,10 +161,12 @@ const ProductManagement = () => {
                                 <button className="px-4 py-2 text-sm border border-slate-200 dark:border-brand-700 rounded-xl hover:bg-slate-50 dark:hover:bg-brand-800 flex items-center gap-2">
                                     <Archive className="w-4 h-4" /> Archive
                                 </button>
-                                <button onClick={() => setBulkAction('delete')}
-                                    className="px-4 py-2 text-sm bg-rose-50 text-rose-700 border border-rose-200 rounded-xl hover:bg-rose-100 flex items-center gap-2">
-                                    <Trash2 className="w-4 h-4" /> Delete
-                                </button>
+                                {canDelete && (
+                                    <button onClick={() => setBulkAction('delete')}
+                                        className="px-4 py-2 text-sm bg-rose-50 text-rose-700 border border-rose-200 rounded-xl hover:bg-rose-100 flex items-center gap-2">
+                                        <Trash2 className="w-4 h-4" /> Delete
+                                    </button>
+                                )}
                             </div>
                         </motion.div>
                     )}
@@ -218,7 +223,7 @@ const ProductManagement = () => {
                                     <p className="text-xs text-slate-500 font-mono mt-0.5">{product.sku}</p>
 
                                     <div className="flex items-center justify-between mt-3">
-                                        <span className="text-xl font-bold text-brand-800 dark:text-white">${product.price?.toFixed(2)}</span>
+                                        <span className="text-xl font-bold text-brand-800 dark:text-white">₦{product.price?.toFixed(2)}</span>
                                         <span className="text-sm text-slate-500">Qty: {product.quantity}</span>
                                     </div>
 
@@ -228,10 +233,12 @@ const ProductManagement = () => {
                                             className="flex-1 py-2 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-800 rounded-lg transition-colors flex items-center justify-center gap-1">
                                             <Pencil className="w-3.5 h-3.5" /> Edit
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(product); }}
-                                            className="flex-1 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors flex items-center justify-center gap-1">
-                                            <Trash2 className="w-3.5 h-3.5" /> Delete
-                                        </button>
+                                        {canDelete && (
+                                            <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(product); }}
+                                                className="flex-1 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors flex items-center justify-center gap-1">
+                                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </motion.div>
@@ -277,10 +284,10 @@ const ProductManagement = () => {
                                             </div>
                                         </td>
                                         <td className="px-4 py-4 text-sm text-slate-500 font-mono">{product.sku}</td>
-                                        <td className="px-4 py-4 text-sm font-bold text-right">${product.price?.toFixed(2)}</td>
+                                        <td className="px-4 py-4 text-sm font-bold text-right">₦{product.price?.toFixed(2)}</td>
                                         <td className="px-4 py-4 text-sm text-right">{product.quantity}</td>
                                         <td className="px-4 py-4 text-center"><StatusBadge status={product.stockStatus?.status} label={product.stockStatus?.label} size="sm" /></td>
-                                        <td className="px-4 py-4 text-sm text-right text-slate-500">${((product.price || 0) * (product.quantity || 0)).toFixed(2)}</td>
+                                        <td className="px-4 py-4 text-sm text-right text-slate-500">₦{((product.price || 0) * (product.quantity || 0)).toFixed(2)}</td>
                                     </motion.tr>
                                 ))}
                             </tbody>
@@ -406,7 +413,7 @@ const ProductFormModal = ({ isOpen, onClose, product, onSuccess }) => {
                                     className="w-full px-4 py-3 border-2 border-slate-200 dark:border-brand-700 rounded-xl text-sm dark:bg-brand-800 dark:text-white focus:ring-2 focus:ring-brand-500/20 resize-none" />
                             </FormField>
                             <div className="grid grid-cols-3 gap-4">
-                                <FormField label="Price ($)" required error={errors.price}>
+                                <FormField label="Price (₦)" required error={errors.price}>
                                     <input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })}
                                         className={`w-full px-4 py-3 border-2 rounded-xl text-sm ${errors.price ? 'border-rose-300 bg-rose-50' : 'border-slate-200 dark:border-brand-700'} dark:bg-brand-800 dark:text-white focus:ring-2 focus:ring-brand-500/20`} />
                                 </FormField>

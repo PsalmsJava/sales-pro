@@ -15,9 +15,13 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import EmptyState from '../../components/ui/EmptyState';
 import Modal from '../../components/ui/Modal';
 import PageHeader from '../../components/ui/PageHeader';
-import { DollarSign, TrendingUp, UserCheck, UserX } from 'lucide-react';
+import { DollarSign, TrendingUp, UserCheck, UserX, ShoppingBag, ExternalLink } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const SalesRepManagement = () => {
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [editingRep, setEditingRep] = useState(null);
@@ -177,15 +181,17 @@ const SalesRepManagement = () => {
                                 </div>
 
                                 {rep.stats && (
-                                    <div className="flex items-center gap-3 text-xs text-slate-500 mb-3 p-2 bg-slate-50 dark:bg-brand-800/30 rounded-lg">
-                                        <span>{rep.stats.totalOrders || 0} orders</span>
+                                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mb-3 p-2 bg-slate-50 dark:bg-brand-800/30 rounded-lg">
+                                        <span>{rep.stats.totalOrders || 0} total</span>
                                         <span>•</span>
-                                        <span>${(rep.stats.totalRevenue || 0).toLocaleString()}</span>
+                                        <span className="font-semibold text-brand-700 dark:text-gold-400">{rep.stats.activeOrders || 0} open</span>
+                                        <span>•</span>
+                                        <span>₦{(rep.stats.totalRevenue || 0).toLocaleString()}</span>
                                     </div>
                                 )}
 
                                 <div className="flex items-center gap-1 pt-3 border-t border-slate-100 dark:border-brand-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => setViewingRep(rep)} className="p-2 text-slate-400 hover:text-brand-600 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors" title="View">
+                                    <button onClick={() => setViewingRep(rep)} className="p-2 text-slate-400 hover:text-brand-600 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors" title="View Details">
                                         <EyeIcon className="w-4 h-4" />
                                     </button>
                                     <button onClick={() => { setEditingRep(rep); setShowForm(true); }} className="p-2 text-slate-400 hover:text-brand-600 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors" title="Edit">
@@ -194,13 +200,15 @@ const SalesRepManagement = () => {
                                     <button onClick={() => setResetPasswordRep(rep)} className="p-2 text-slate-400 hover:text-gold-600 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors" title="Reset Password">
                                         <KeyIcon className="w-4 h-4" />
                                     </button>
-                                    <button
-                                        onClick={() => setToggleRep({ id: rep.id, action: rep.isActive ? 'deactivate' : 'reactivate', name: `${rep.firstName} ${rep.lastName}` })}
-                                        className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors ${rep.isActive ? 'text-slate-400 hover:text-rose-600' : 'text-slate-400 hover:text-emerald-600'}`}
-                                        title={rep.isActive ? 'Deactivate' : 'Reactivate'}
-                                    >
-                                        {rep.isActive ? <UserMinusIcon className="w-4 h-4" /> : <UserPlusIcon className="w-4 h-4" />}
-                                    </button>
+                                    {user?.role === 'admin' && (
+                                        <button
+                                            onClick={() => setToggleRep({ id: rep.id, action: rep.isActive ? 'deactivate' : 'reactivate', name: `${rep.firstName} ${rep.lastName}` })}
+                                            className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors ${rep.isActive ? 'text-slate-400 hover:text-rose-600' : 'text-slate-400 hover:text-emerald-600'}`}
+                                            title={rep.isActive ? 'Deactivate' : 'Reactivate'}
+                                        >
+                                            {rep.isActive ? <UserMinusIcon className="w-4 h-4" /> : <UserPlusIcon className="w-4 h-4" />}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>
@@ -242,16 +250,30 @@ const SalesRepManagement = () => {
                             {viewingRep.commission && (
                                 <>
                                     <div><span className="text-slate-500">Structure:</span> <span className="font-medium capitalize">{viewingRep.commission.structure?.replace(/_/g, ' ')}</span></div>
-                                    {viewingRep.commission.baseSalary > 0 && <div><span className="text-slate-500">Salary:</span> <span className="font-medium">${viewingRep.commission.baseSalary}/mo</span></div>}
+                                    {viewingRep.commission.baseSalary > 0 && <div><span className="text-slate-500">Salary:</span> <span className="font-medium">₦{viewingRep.commission.baseSalary.toLocaleString()}/mo</span></div>}
                                     {viewingRep.commission.commissionPercentage > 0 && <div><span className="text-slate-500">Commission:</span> <span className="font-medium">{viewingRep.commission.commissionPercentage}%</span></div>}
                                 </>
                             )}
                             {viewingRep.stats && (
                                 <>
                                     <div><span className="text-slate-500">Total Orders:</span> <span className="font-medium">{viewingRep.stats.totalOrders || 0}</span></div>
-                                    <div><span className="text-slate-500">Revenue:</span> <span className="font-medium">${(viewingRep.stats.totalRevenue || 0).toLocaleString()}</span></div>
+                                    <div><span className="text-slate-500">Currently Open:</span> <span className="font-bold text-brand-700 dark:text-gold-400">{viewingRep.stats.activeOrders || 0}</span></div>
+                                    <div><span className="text-slate-500">Completed Orders:</span> <span className="font-medium">{viewingRep.stats.completedOrders || 0}</span></div>
+                                    <div><span className="text-slate-500">Revenue:</span> <span className="font-medium">₦{(viewingRep.stats.totalRevenue || 0).toLocaleString()}</span></div>
                                 </>
                             )}
+                        </div>
+                        <div className="pt-2 border-t border-slate-100 dark:border-brand-700">
+                            <button
+                                onClick={() => {
+                                    const basePath = user?.role === 'head_of_sales' ? '/head-of-sales/dashboard/orders' : '/admin/dashboard/orders';
+                                    navigate(basePath);
+                                    setViewingRep(null);
+                                }}
+                                className="w-full py-2.5 px-4 bg-brand-50 dark:bg-brand-800 text-brand-800 dark:text-gold-300 font-semibold rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-brand-100 dark:hover:bg-brand-700 transition"
+                            >
+                                <ShoppingBag className="w-4 h-4" /> View Associated Orders
+                            </button>
                         </div>
                     </div>
                 )}
@@ -293,8 +315,8 @@ const SalesRepManagement = () => {
                         <button onClick={() => setToggleRep(null)} className="px-5 py-2.5 border-2 border-slate-300 dark:border-brand-600 rounded-xl hover:bg-white dark:hover:bg-brand-800 transition font-medium text-sm">Cancel</button>
                         <button onClick={() => deleteMutation.mutate(toggleRep)} disabled={deleteMutation.isLoading}
                             className={`px-6 py-2.5 text-white rounded-xl transition-all font-semibold text-sm shadow-lg ${toggleRep?.action === 'deactivate'
-                                    ? 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 shadow-rose-500/25'
-                                    : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-emerald-500/25'
+                                ? 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 shadow-rose-500/25'
+                                : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-emerald-500/25'
                                 }`}>
                             {deleteMutation.isLoading ? 'Processing...' : toggleRep?.action === 'deactivate' ? 'Deactivate' : 'Reactivate'}
                         </button>

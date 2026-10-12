@@ -6,7 +6,7 @@ const { salesRepValidators } = require('../utils/validators');
 const auditLogger = require('../middleware/auditLogger');
 
 router.use(authenticate);
-router.use(authorize('admin'));
+router.use(authorize('admin', 'head_of_sales'));
 
 // Create sales rep
 router.post(

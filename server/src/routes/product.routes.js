@@ -5,13 +5,16 @@ const validate = require('../middleware/validate');
 const { productValidators } = require('../utils/validators');
 const auditLogger = require('../middleware/auditLogger');
 
-// All routes require authentication
+// Public route - allows customers from social media ad links to view product details
+router.get('/:id', productController.getProduct);
+
+// Protected routes below
 router.use(authenticate);
 
-// Admin routes
+// Admin & Inventory Manager product mutation routes
 router.post(
     '/',
-    authorize('admin'),
+    authorize('admin', 'inventory_manager'),
     validate(productValidators.createProduct),
     auditLogger('CREATE', 'PRODUCT'),
     productController.createProduct
@@ -19,7 +22,7 @@ router.post(
 
 router.put(
     '/:id',
-    authorize('admin'),
+    authorize('admin', 'inventory_manager'),
     validate(productValidators.updateProduct),
     auditLogger('UPDATE', 'PRODUCT'),
     productController.updateProduct
@@ -34,29 +37,24 @@ router.delete(
 
 router.patch(
     '/:id/stock',
-    authorize('admin'),
+    authorize('admin', 'inventory_manager'),
     validate(productValidators.updateStock),
     auditLogger('UPDATE', 'PRODUCT_STOCK'),
     productController.updateStock
 );
 
-// Admin and Sales Rep can view products
+// Ad campaigns view
 router.get(
     '/ads',
-    authorize('admin', 'sales_rep'),
+    authorize('admin', 'sales_rep', 'head_of_sales'),
     productController.getProductsForAds
 );
 
+// View all products
 router.get(
     '/',
-    authorize('admin', 'sales_rep'),
+    authorize('admin', 'sales_rep', 'inventory_manager', 'head_of_sales'),
     productController.getAllProducts
-);
-
-router.get(
-    '/:id',
-    authorize('admin', 'sales_rep'),
-    productController.getProduct
 );
 
 module.exports = router;

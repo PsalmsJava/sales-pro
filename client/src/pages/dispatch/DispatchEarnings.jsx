@@ -21,9 +21,9 @@ const DispatchEarnings = () => {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Total Earnings" value={`$${(data?.totalEarnings || 0).toLocaleString()}`} icon={DollarSign} color="emerald" loading={isLoading} />
-                <StatCard label="Pending" value={`$${(data?.pendingEarnings || 0).toLocaleString()}`} icon={Clock} color="gold" loading={isLoading} />
-                <StatCard label="Paid" value={`$${(data?.paidEarnings || 0).toLocaleString()}`} icon={CheckCircle} color="navy" loading={isLoading} />
+                <StatCard label="Total Earnings" value={`₦${(data?.totalEarnings || 0).toLocaleString()}`} icon={DollarSign} color="emerald" loading={isLoading} />
+                <StatCard label="Pending" value={`₦${(data?.pendingEarnings || 0).toLocaleString()}`} icon={Clock} color="gold" loading={isLoading} />
+                <StatCard label="Paid" value={`₦${(data?.paidEarnings || 0).toLocaleString()}`} icon={CheckCircle} color="navy" loading={isLoading} />
                 <StatCard label="Deliveries" value={data?.recentAssignments?.filter(a => a.status === 'delivered').length || 0} icon={Package} color="teal" loading={isLoading} />
             </div>
 
@@ -43,7 +43,7 @@ const DispatchEarnings = () => {
                                 <p className="text-xs text-slate-500">{d.customerCity}</p>
                             </div>
                         </div>
-                        <span className="font-bold text-emerald-600">${((d.deliveryFee || 0) * 0.8).toFixed(2)}</span>
+                        <span className="font-bold text-emerald-600">₦{((d.deliveryFee || 0) * 0.8).toFixed(2)}</span>
                     </div>
                 ))}
                 {(!data?.recentAssignments || data.recentAssignments.filter(a => a.status === 'delivered').length === 0) && (

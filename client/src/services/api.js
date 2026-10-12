@@ -1,8 +1,18 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+const configuredBaseUrl = (process.env.REACT_APP_API_URL || '').trim().replace(/\/+$/, '');
+
+export const API_BASE_URL = configuredBaseUrl
+    ? (/\/api$/.test(configuredBaseUrl) ? configuredBaseUrl : `${configuredBaseUrl}/api`)
+    : '';
+
+if (!API_BASE_URL) {
+    console.error('[api] REACT_APP_API_URL is not configured');
+}
+
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL,
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -25,30 +35,51 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+        const requestUrl = originalRequest?.url || '';
+        const isAuthRequest = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/refresh');
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
             originalRequest._retry = true;
+            const refreshToken = localStorage.getItem('refreshToken');
 
-            try {
-                const refreshToken = localStorage.getItem('refreshToken');
-                const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/refresh`, {
-                    refreshToken,
-                });
+            if (refreshToken) {
+                try {
+                    const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+                        refreshToken,
+                    });
 
-                const { accessToken } = response.data;
-                localStorage.setItem('accessToken', accessToken);
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                    const accessToken = response.data?.data?.accessToken;
+                    if (!accessToken) {
+                        throw new Error('Token refresh failed');
+                    }
 
-                return api(originalRequest);
-            } catch (refreshError) {
-                localStorage.clear();
-                window.location.href = '/login';
-                return Promise.reject(refreshError);
+                    localStorage.setItem('accessToken', accessToken);
+                    originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+                    return api(originalRequest);
+                } catch (refreshError) {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('user');
+                    if (window.location.pathname !== '/login' && !window.location.pathname.startsWith('/order/')) {
+                        window.location.href = '/login';
+                    }
+                    return Promise.reject(refreshError);
+                }
+            } else {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('user');
+                if (window.location.pathname !== '/login' && !window.location.pathname.startsWith('/order/')) {
+                    window.location.href = '/login';
+                }
             }
         }
 
         const message = error.response?.data?.message || 'An unexpected error occurred';
-        toast.error(message);
+        // Only show toast if it's not a background query or handled elsewhere
+        if (!isAuthRequest) {
+            toast.error(message);
+        }
 
         return Promise.reject(error);
     }
