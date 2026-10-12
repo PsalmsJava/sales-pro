@@ -218,7 +218,7 @@ const AdminLayout = () => {
                         </motion.div>
                         {!sidebarCollapsed && (
                             <div className="whitespace-nowrap">
-                                <h1 className="font-extrabold text-brand-800 dark:text-white text-lg leading-tight tracking-tight">SalesPro</h1>
+                                <h1 className="font-extrabold text-brand-800 dark:text-white text-lg leading-tight tracking-tight">MaxSnow</h1>
                                 <p className="text-[10px] text-gold-600 dark:text-gold-400 uppercase tracking-[0.2em] font-bold">Enterprise</p>
                             </div>
                         )}

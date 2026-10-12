@@ -50,7 +50,7 @@ const SalesRepLayout = () => {
                         </div>
                         {!sidebarCollapsed && (
                             <div className="whitespace-nowrap">
-                                <h1 className="font-extrabold text-brand-800 dark:text-white text-lg">SalesPro</h1>
+                                <h1 className="font-extrabold text-brand-800 dark:text-white text-lg">MaxSnow</h1>
                                 <p className="text-[10px] text-gold-600 dark:text-gold-400 uppercase tracking-widest font-bold">Sales Rep</p>
                             </div>
                         )}

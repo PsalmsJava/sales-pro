@@ -116,7 +116,7 @@ const OrderPage = () => {
                         <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-700 to-brand-900 flex items-center justify-center">
                             <Package className="h-4 w-4 text-white" />
                         </div>
-                        <span className="font-bold text-brand-800 dark:text-white">SalesPro</span>
+                        <span className="font-bold text-brand-800 dark:text-white">MaxSnow</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                         <Shield className="w-4 h-4 text-emerald-500" />

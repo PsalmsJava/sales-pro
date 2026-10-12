@@ -84,7 +84,7 @@ const InstallPrompt = () => {
 
                             <div className="flex-1 min-w-0">
                                 <h4 className="font-semibold text-gray-900 dark:text-white">
-                                    Install SalesPro
+                                    Install MaxSnow
                                 </h4>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                     Install on your device for quick access and offline use

@@ -70,7 +70,7 @@ const LoginPage = () => {
                             <Layers className="h-7 w-7 text-white" />
                         </div>
                         <div className="text-left">
-                            <h1 className="text-3xl font-extrabold text-white tracking-tight">SalesPro</h1>
+                            <h1 className="text-3xl font-extrabold text-white tracking-tight">MaxSnow</h1>
                             <p className="text-gold-400 text-sm font-medium tracking-wider uppercase">Enterprise</p>
                         </div>
                     </motion.div>
