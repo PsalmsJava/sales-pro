@@ -171,23 +171,25 @@ class ProductController {
                 data: {
                     products,
                     platform: platform || 'all',
-                    instructions: this.getAdInstructions(platform)
+                    instructions: getAdInstructions(platform)
                 }
             });
         } catch (error) {
             next(error);
         }
     }
+}
 
-    getAdInstructions(platform) {
-        const instructions = {
-            facebook: 'Copy the product link and use it in your Facebook Ads Manager. Add UTM parameters for tracking.',
-            instagram: 'Use the product link in your Instagram bio or Story ads. Swipe-up links work best.',
-            twitter: 'Use the product link in your Twitter Ads campaigns. Best for Promoted Tweets.',
-            all: 'Select a platform above to get specific instructions.'
-        };
-        return platform ? (instructions[platform] || instructions.all) : instructions.all;
-    }
+// Module-level helper: Express invokes route handlers unbound, so `this`
+// is undefined inside controller methods. Keep this off the class.
+function getAdInstructions(platform) {
+    const instructions = {
+        facebook: 'Copy the product link and use it in your Facebook Ads Manager. Add UTM parameters for tracking.',
+        instagram: 'Use the product link in your Instagram bio or Story ads. Swipe-up links work best.',
+        twitter: 'Use the product link in your Twitter Ads campaigns. Best for Promoted Tweets.',
+        all: 'Select a platform above to get specific instructions.'
+    };
+    return platform ? (instructions[platform] || instructions.all) : instructions.all;
 }
 
 module.exports = new ProductController();
