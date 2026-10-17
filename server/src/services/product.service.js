@@ -113,6 +113,23 @@ class ProductService {
         }
     }
 
+    async permanentDeleteProduct(id, userId) {
+        try {
+            await productRepository.findByIdAny(id); // Check if exists (including soft-deleted)
+            await productRepository.hardDelete(id);
+
+            logger.warn('Product permanently deleted', {
+                productId: id,
+                deletedBy: userId
+            });
+
+            return true;
+        } catch (error) {
+            logger.error('Permanent delete product service error', { error: error.message, productId: id });
+            throw error;
+        }
+    }
+
     async updateStock(id, quantity, operation, userId) {
         try {
             const product = await productRepository.updateQuantity(id, quantity, operation);

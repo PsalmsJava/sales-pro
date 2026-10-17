@@ -12,9 +12,13 @@ import adminService from '../../services/adminService';
 import StatCard from '../../components/ui/StatCard';
 import SectionCard from '../../components/ui/SectionCard';
 import StatusBadge from '../../components/ui/StatusBadge';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminOverview = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const isHeadOfSales = user?.role === 'head_of_sales';
+    const basePath = isHeadOfSales ? '/head-of-sales/dashboard' : '/admin/dashboard';
     const { data, isLoading } = useQuery({
         queryKey: ['admin-dashboard'],
         queryFn: adminService.getDashboardStats,
@@ -37,15 +41,15 @@ const AdminOverview = () => {
             title: pendingOrders > 10 ? 'Attention Needed' : 'All Clear',
             message: pendingOrders > 10 ? `${pendingOrders} pending orders require assignment` : 'Order queue is manageable',
             action: pendingOrders > 10 ? 'Assign Orders' : null,
-            actionPath: '/admin/dashboard/orders',
+            actionPath: `${basePath}/orders`,
         },
         {
             type: lowStockProducts > 0 ? 'warning' : 'info',
             icon: lowStockProducts > 0 ? TrendingDown : TrendingUp,
             title: lowStockProducts > 0 ? 'Inventory Alert' : 'Stock Healthy',
             message: lowStockProducts > 0 ? `${lowStockProducts} products running low on stock` : 'All products well stocked',
-            action: lowStockProducts > 0 ? 'View Products' : null,
-            actionPath: '/admin/dashboard/products',
+            action: !isHeadOfSales && lowStockProducts > 0 ? 'View Products' : null,
+            actionPath: `${basePath}/products`,
         },
         {
             type: todayOrders > 5 ? 'success' : 'info',
@@ -91,14 +95,21 @@ const AdminOverview = () => {
                             </p>
                         </div>
                         <div className="flex gap-3">
-                            <button onClick={() => navigate('/admin/dashboard/orders')}
+                            <button onClick={() => navigate(`${basePath}/orders`)}
                                 className="px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition font-semibold text-sm flex items-center gap-2">
                                 <Eye className="w-4 h-4" /> View Orders
                             </button>
-                            <button onClick={() => navigate('/admin/dashboard/products')}
-                                className="px-5 py-2.5 bg-gradient-to-r from-gold-500 to-gold-600 text-brand-900 rounded-xl hover:from-gold-400 hover:to-gold-500 transition font-semibold text-sm shadow-lg shadow-gold-500/25 flex items-center gap-2">
-                                <Package className="w-4 h-4" /> Products
-                            </button>
+                            {isHeadOfSales ? (
+                                <button onClick={() => navigate(`${basePath}/sales-reps`)}
+                                    className="px-5 py-2.5 bg-gradient-to-r from-gold-500 to-gold-600 text-brand-900 rounded-xl hover:from-gold-400 hover:to-gold-500 transition font-semibold text-sm shadow-lg shadow-gold-500/25 flex items-center gap-2">
+                                    <Users className="w-4 h-4" /> Sales Team
+                                </button>
+                            ) : (
+                                <button onClick={() => navigate(`${basePath}/products`)}
+                                    className="px-5 py-2.5 bg-gradient-to-r from-gold-500 to-gold-600 text-brand-900 rounded-xl hover:from-gold-400 hover:to-gold-500 transition font-semibold text-sm shadow-lg shadow-gold-500/25 flex items-center gap-2">
+                                    <Package className="w-4 h-4" /> Products
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -146,7 +157,7 @@ const AdminOverview = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Recent Orders */}
                 <SectionCard title="Recent Orders" subtitle="Latest transactions" className="lg:col-span-2"
-                    actions={<button onClick={() => navigate('/admin/dashboard/orders')} className="text-sm text-brand-600 dark:text-gold-400 font-medium flex items-center gap-1 hover:underline">View All <ArrowRight className="w-4 h-4" /></button>}>
+                    actions={<button onClick={() => navigate(`${basePath}/orders`)} className="text-sm text-brand-600 dark:text-gold-400 font-medium flex items-center gap-1 hover:underline">View All <ArrowRight className="w-4 h-4" /></button>}>
                     {isLoading ? (
                         <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="animate-pulse flex items-center gap-4 py-3"><div className="h-10 w-10 bg-slate-200 dark:bg-brand-700 rounded-xl" /><div className="flex-1 space-y-2"><div className="h-4 w-40 bg-slate-200 dark:bg-brand-700 rounded" /><div className="h-3 w-24 bg-slate-200 dark:bg-brand-700 rounded" /></div><div className="h-6 w-16 bg-slate-200 dark:bg-brand-700 rounded-full" /></div>)}</div>
                     ) : recentOrders.length === 0 ? (
@@ -155,7 +166,7 @@ const AdminOverview = () => {
                         <div className="divide-y divide-slate-100 dark:divide-brand-700">
                             {recentOrders.slice(0, 6).map(order => (
                                 <motion.div key={order.id} whileHover={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
-                                    onClick={() => navigate('/admin/dashboard/orders')}
+                                    onClick={() => navigate(`${basePath}/orders`)}
                                     className="flex items-center justify-between py-3 px-2 -mx-2 rounded-xl transition-colors cursor-pointer">
                                     <div className="flex items-center gap-3">
                                         <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-brand-800 dark:to-brand-700 flex items-center justify-center">

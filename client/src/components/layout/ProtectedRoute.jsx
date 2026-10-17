@@ -24,6 +24,8 @@ const ProtectedRoute = ({ children, roles = [] }) => {
             admin: '/admin/dashboard',
             sales_rep: '/sales-rep/dashboard',
             dispatch_partner: '/dispatch/dashboard',
+            head_of_sales: '/head-of-sales/dashboard',
+            inventory_manager: '/inventory-manager/dashboard',
         };
         const redirectPath = roleRoutes[user?.role] || '/login';
         return <Navigate to={redirectPath} replace />;

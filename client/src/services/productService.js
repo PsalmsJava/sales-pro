@@ -26,6 +26,11 @@ const productService = {
         return response.data;
     },
 
+    async permanentDeleteProduct(id) {
+        const response = await api.delete(`/products/${id}/permanent`);
+        return response.data;
+    },
+
     async updateStock(id, quantity, operation) {
         const response = await api.patch(`/products/${id}/stock`, { quantity, operation });
         return response.data.data;

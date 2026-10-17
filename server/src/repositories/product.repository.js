@@ -56,11 +56,33 @@ class ProductRepository {
         }
     }
 
+    async findByIdAny(id) {
+        try {
+            const product = await Product.findByIdAny(id);
+            if (!product) {
+                throw new Error('Product not found');
+            }
+            return product;
+        } catch (error) {
+            logger.error('Error finding product by ID (any status)', { error: error.message, productId: id });
+            throw error;
+        }
+    }
+
     async softDelete(id) {
         try {
             await Product.softDelete(id);
         } catch (error) {
             logger.error('Error deleting product', { error: error.message, productId: id });
+            throw error;
+        }
+    }
+
+    async hardDelete(id) {
+        try {
+            await Product.hardDelete(id);
+        } catch (error) {
+            logger.error('Error permanently deleting product', { error: error.message, productId: id });
             throw error;
         }
     }

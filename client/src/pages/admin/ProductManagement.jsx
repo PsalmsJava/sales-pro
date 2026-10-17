@@ -18,7 +18,8 @@ import { useAuth } from '../../context/AuthContext';
 
 const ProductManagement = () => {
     const { user } = useAuth();
-    const canDelete = user?.role === 'admin';
+    const canSoftDelete = user?.role === 'admin' || user?.role === 'inventory_manager';
+    const canPermanentDelete = user?.role === 'admin';
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState('grid');
@@ -44,6 +45,18 @@ const ProductManagement = () => {
             setDeleteConfirm(null);
             setSelectedProducts([]);
         },
+        onError: (error) => toast.error(error.response?.data?.message || 'Failed to delete product'),
+    });
+
+    const permanentDeleteMutation = useMutation({
+        mutationFn: (id) => productService.permanentDeleteProduct(id),
+        onSuccess: () => {
+            toast.success('Product permanently deleted');
+            queryClient.invalidateQueries(['products']);
+            setDeleteConfirm(null);
+            setSelectedProducts([]);
+        },
+        onError: (error) => toast.error(error.response?.data?.message || 'Failed to permanently delete product'),
     });
 
     const products = data?.data || [];
@@ -161,7 +174,7 @@ const ProductManagement = () => {
                                 <button className="px-4 py-2 text-sm border border-slate-200 dark:border-brand-700 rounded-xl hover:bg-slate-50 dark:hover:bg-brand-800 flex items-center gap-2">
                                     <Archive className="w-4 h-4" /> Archive
                                 </button>
-                                {canDelete && (
+                                {canSoftDelete && (
                                     <button onClick={() => setBulkAction('delete')}
                                         className="px-4 py-2 text-sm bg-rose-50 text-rose-700 border border-rose-200 rounded-xl hover:bg-rose-100 flex items-center gap-2">
                                         <Trash2 className="w-4 h-4" /> Delete
@@ -233,7 +246,7 @@ const ProductManagement = () => {
                                             className="flex-1 py-2 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-800 rounded-lg transition-colors flex items-center justify-center gap-1">
                                             <Pencil className="w-3.5 h-3.5" /> Edit
                                         </button>
-                                        {canDelete && (
+                                        {canSoftDelete && (
                                             <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(product); }}
                                                 className="flex-1 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors flex items-center justify-center gap-1">
                                                 <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -314,12 +327,21 @@ const ProductManagement = () => {
                                     <AlertTriangle className="w-8 h-8 text-rose-600" />
                                 </div>
                                 <h3 className="text-xl font-bold text-brand-800 dark:text-white">Delete Product</h3>
-                                <p className="text-slate-500 mt-2">Are you sure you want to delete <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.</p>
+                                <p className="text-slate-500 mt-2">Are you sure you want to delete <strong>"{deleteConfirm.name}"</strong>?</p>
+                                {canPermanentDelete && (
+                                    <p className="text-xs text-slate-400 mt-2">Use "Delete Permanently" to remove it from the database forever. This cannot be undone.</p>
+                                )}
                             </div>
                             <div className="flex gap-3 mt-6">
                                 <button onClick={() => setDeleteConfirm(null)}
                                     className="flex-1 py-3 border-2 border-slate-200 dark:border-brand-700 rounded-xl font-medium text-sm hover:bg-slate-50 dark:hover:bg-brand-800 transition-colors">Cancel</button>
-                                <button onClick={() => deleteMutation.mutate(deleteConfirm.id)} disabled={deleteMutation.isLoading}
+                                {canPermanentDelete && (
+                                    <button onClick={() => permanentDeleteMutation.mutate(deleteConfirm.id)} disabled={permanentDeleteMutation.isLoading || deleteMutation.isLoading}
+                                        className="flex-1 py-3 bg-rose-900 text-white rounded-xl font-semibold text-sm hover:bg-rose-950 transition-all shadow-lg shadow-rose-900/25">
+                                        {permanentDeleteMutation.isLoading ? 'Deleting...' : 'Delete Permanently'}
+                                    </button>
+                                )}
+                                <button onClick={() => deleteMutation.mutate(deleteConfirm.id)} disabled={deleteMutation.isLoading || permanentDeleteMutation.isLoading}
                                     className="flex-1 py-3 bg-gradient-to-r from-rose-600 to-rose-700 text-white rounded-xl font-semibold text-sm hover:from-rose-700 hover:to-rose-800 transition-all shadow-lg shadow-rose-500/25">
                                     {deleteMutation.isLoading ? 'Deleting...' : 'Delete'}
                                 </button>

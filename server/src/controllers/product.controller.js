@@ -110,6 +110,25 @@ class ProductController {
         }
     }
 
+    async permanentDeleteProduct(req, res, next) {
+        try {
+            await productService.permanentDeleteProduct(req.params.id, req.user.id);
+
+            res.json({
+                success: true,
+                message: 'Product permanently deleted'
+            });
+        } catch (error) {
+            if (error.message === 'Product not found') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Product not found'
+                });
+            }
+            next(error);
+        }
+    }
+
     async updateStock(req, res, next) {
         try {
             const { quantity, operation } = req.body;

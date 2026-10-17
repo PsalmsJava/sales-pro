@@ -28,11 +28,20 @@ router.put(
     productController.updateProduct
 );
 
+// Soft delete - Admin & Inventory Manager
 router.delete(
     '/:id',
-    authorize('admin'),
+    authorize('admin', 'inventory_manager'),
     auditLogger('DELETE', 'PRODUCT'),
     productController.deleteProduct
+);
+
+// Permanent delete - Admin only
+router.delete(
+    '/:id/permanent',
+    authorize('admin'),
+    auditLogger('PERMANENT_DELETE', 'PRODUCT'),
+    productController.permanentDeleteProduct
 );
 
 router.patch(

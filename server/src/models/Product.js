@@ -95,6 +95,12 @@ class Product {
         return updated;
     }
 
+    static async findByIdAny(id) {
+        return db(this.tableName)
+            .where({ id })
+            .first();
+    }
+
     static async softDelete(id) {
         return db(this.tableName)
             .where({ id })
@@ -102,6 +108,12 @@ class Product {
                 is_active: false,
                 updated_at: new Date()
             });
+    }
+
+    static async hardDelete(id) {
+        return db(this.tableName)
+            .where({ id })
+            .del();
     }
 
     static async bulkUpdateQuantity(items) {

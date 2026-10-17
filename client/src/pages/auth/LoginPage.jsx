@@ -167,9 +167,9 @@ const LoginPage = () => {
                         </motion.button>
                     </form>
 
-                    <p className="text-center text-xs text-slate-400 mt-8">
+                    {/* <p className="text-center text-xs text-slate-400 mt-8">
                         Default password for all accounts: <span className="font-mono font-bold text-brand-600 dark:text-gold-400">Password@123</span>
-                    </p>
+                    </p> */}
                 </motion.div>
             </div>
         </div>
