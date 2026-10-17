@@ -104,9 +104,29 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
-    logger.info(`API available at http://localhost:${PORT}/api`);
-});
+
+// Run pending migrations on boot, then start listening.
+// render.yaml does not run migrations separately, so this guarantees
+// the schema (roles, constraints) is always up to date in production.
+const startServer = async () => {
+    try {
+        const db = require('./config/database');
+        const [, appliedMigrations] = await db.migrate.latest();
+        if (appliedMigrations && appliedMigrations.length > 0) {
+            logger.info('Applied database migrations on boot', { migrations: appliedMigrations });
+        } else {
+            logger.info('Database migrations are up to date');
+        }
+    } catch (error) {
+        logger.error('Database migration failed on boot', { error: error.message, stack: error.stack });
+    }
+
+    app.listen(PORT, () => {
+        logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+        logger.info(`API available at http://localhost:${PORT}/api`);
+    });
+};
+
+startServer();
 
 module.exports = app;

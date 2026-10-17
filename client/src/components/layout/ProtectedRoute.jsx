@@ -22,6 +22,7 @@ const ProtectedRoute = ({ children, roles = [] }) => {
         // Redirect to appropriate dashboard based on role
         const roleRoutes = {
             admin: '/admin/dashboard',
+            manager: '/manager/dashboard',
             sales_rep: '/sales-rep/dashboard',
             dispatch_partner: '/dispatch/dashboard',
             head_of_sales: '/head-of-sales/dashboard',

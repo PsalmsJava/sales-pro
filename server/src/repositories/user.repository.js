@@ -15,6 +15,19 @@ class UserRepository {
         }
     }
 
+    async findByIdAny(id) {
+        try {
+            const user = await User.findByIdAny(id);
+            if (!user) {
+                logger.warn('User not found', { userId: id });
+            }
+            return user;
+        } catch (error) {
+            logger.error('Error finding user by ID (any status)', { error: error.message, userId: id });
+            throw error;
+        }
+    }
+
     async findByEmail(email) {
         try {
             return await User.findByEmail(email);

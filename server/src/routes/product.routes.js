@@ -5,16 +5,25 @@ const validate = require('../middleware/validate');
 const { productValidators } = require('../utils/validators');
 const auditLogger = require('../middleware/auditLogger');
 
+// Ad campaigns view - MUST be registered before the public /:id route,
+// otherwise GET /products/ads matches /:id with id="ads" and 500s.
+router.get(
+    '/ads',
+    authenticate,
+    authorize('admin', 'manager', 'sales_rep', 'head_of_sales'),
+    productController.getProductsForAds
+);
+
 // Public route - allows customers from social media ad links to view product details
 router.get('/:id', productController.getProduct);
 
 // Protected routes below
 router.use(authenticate);
 
-// Admin & Inventory Manager product mutation routes
+// Admin, Manager & Inventory Manager product mutation routes
 router.post(
     '/',
-    authorize('admin', 'inventory_manager'),
+    authorize('admin', 'manager', 'inventory_manager'),
     validate(productValidators.createProduct),
     auditLogger('CREATE', 'PRODUCT'),
     productController.createProduct
@@ -22,16 +31,16 @@ router.post(
 
 router.put(
     '/:id',
-    authorize('admin', 'inventory_manager'),
+    authorize('admin', 'manager', 'inventory_manager'),
     validate(productValidators.updateProduct),
     auditLogger('UPDATE', 'PRODUCT'),
     productController.updateProduct
 );
 
-// Soft delete - Admin & Inventory Manager
+// Soft delete - Admin, Manager & Inventory Manager
 router.delete(
     '/:id',
-    authorize('admin', 'inventory_manager'),
+    authorize('admin', 'manager', 'inventory_manager'),
     auditLogger('DELETE', 'PRODUCT'),
     productController.deleteProduct
 );
@@ -46,23 +55,16 @@ router.delete(
 
 router.patch(
     '/:id/stock',
-    authorize('admin', 'inventory_manager'),
+    authorize('admin', 'manager', 'inventory_manager'),
     validate(productValidators.updateStock),
     auditLogger('UPDATE', 'PRODUCT_STOCK'),
     productController.updateStock
 );
 
-// Ad campaigns view
-router.get(
-    '/ads',
-    authorize('admin', 'sales_rep', 'head_of_sales'),
-    productController.getProductsForAds
-);
-
 // View all products
 router.get(
     '/',
-    authorize('admin', 'sales_rep', 'inventory_manager', 'head_of_sales'),
+    authorize('admin', 'manager', 'sales_rep', 'inventory_manager', 'head_of_sales'),
     productController.getAllProducts
 );
 

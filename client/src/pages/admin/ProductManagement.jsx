@@ -18,7 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const ProductManagement = () => {
     const { user } = useAuth();
-    const canSoftDelete = user?.role === 'admin' || user?.role === 'inventory_manager';
+    const canSoftDelete = ['admin', 'manager', 'inventory_manager'].includes(user?.role);
     const canPermanentDelete = user?.role === 'admin';
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);

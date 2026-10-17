@@ -7,10 +7,10 @@ const auditLogger = require('../middleware/auditLogger');
 
 router.use(authenticate);
 
-// Admin routes
+// Admin & Manager routes
 router.post(
     '/set/:userId',
-    authorize('admin'),
+    authorize('admin', 'manager'),
     validate(commissionValidators.setCommission),
     auditLogger('UPDATE', 'COMMISSION_CONFIG'),
     commissionController.setCommission
@@ -18,14 +18,14 @@ router.post(
 
 router.post(
     '/process-salaries',
-    authorize('admin'),
+    authorize('admin', 'manager'),
     auditLogger('PROCESS', 'SALARIES'),
     commissionController.processSalaries
 );
 
 router.get(
     '/user/:userId',
-    authorize('admin'),
+    authorize('admin', 'manager'),
     commissionController.getUserEarnings
 );
 

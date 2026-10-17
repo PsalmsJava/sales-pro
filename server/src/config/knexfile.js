@@ -11,13 +11,13 @@ module.exports = {
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD
         },
-        migrations: { directory: '../migrations' },
-        seeds: { directory: '../seeds' }
+        migrations: { directory: path.resolve(__dirname, '../migrations') },
+        seeds: { directory: path.resolve(__dirname, '../seeds') }
     },
     production: {
         client: 'pg',
         connection: process.env.DATABASE_URL,
-        migrations: { directory: '../migrations' },
-        seeds: { directory: '../seeds' }
+        migrations: { directory: path.resolve(__dirname, '../migrations') },
+        seeds: { directory: path.resolve(__dirname, '../seeds') }
     }
 };

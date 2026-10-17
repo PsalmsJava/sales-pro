@@ -34,6 +34,7 @@ const CustomerOrderPage = lazy(() => import('./pages/customer/OrderPage'));
 const DispatchRegisterPage = lazy(() => import('./pages/dispatch/RegisterPage'));
 const ProductDetail = lazy(() => import('./pages/admin/ProductDetail'));
 const InventoryOverview = lazy(() => import('./pages/inventory/InventoryOverview'));
+const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -101,7 +102,26 @@ function App() {
                                         <Route path="commissions" element={<CommissionSettings />} />
                                         <Route path="payments" element={<PaymentSettings />} />
                                         <Route path="products/:id" element={<ProductDetail />} />
+                                        <Route path="users" element={<UserManagement />} />
                                         <Route path="settings" element={<SettingsPlaceholder />} />
+                                    </Route>
+
+                                    {/* Manager Routes - General Manager, second only to admin */}
+                                    <Route path="/manager/dashboard" element={
+                                        <ProtectedRoute roles={['manager', 'admin']}>
+                                            <AdminLayout />
+                                        </ProtectedRoute>
+                                    }>
+                                        <Route index element={<AdminOverview />} />
+                                        <Route path="analytics" element={<AnalyticsPlaceholder />} />
+                                        <Route path="products" element={<ProductManagement />} />
+                                        <Route path="products/:id" element={<ProductDetail />} />
+                                        <Route path="orders" element={<OrderManagement />} />
+                                        <Route path="ads" element={<AdSetup />} />
+                                        <Route path="sales-reps" element={<SalesRepManagement />} />
+                                        <Route path="dispatch" element={<DispatchPartnerManagement />} />
+                                        <Route path="commissions" element={<CommissionSettings />} />
+                                        <Route path="payments" element={<PaymentSettings />} />
                                     </Route>
 
                                     {/* Inventory Manager Routes */}

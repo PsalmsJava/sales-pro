@@ -13,7 +13,14 @@ router.post('/refresh', authController.refreshToken);
 router.get('/me', authenticate, authController.getCurrentUser);
 router.post('/change-password', authenticate, validate(authValidators.changePassword), authController.changePassword);
 
-// Admin only - create users
+// Admin only - manage users
+router.get(
+    '/users',
+    authenticate,
+    authorize('admin'),
+    authController.getUsers
+);
+
 router.post(
     '/users',
     authenticate,
@@ -21,6 +28,15 @@ router.post(
     validate(userValidators.createUser),
     auditLogger('CREATE', 'USER'),
     authController.createUser
+);
+
+router.patch(
+    '/users/:id',
+    authenticate,
+    authorize('admin'),
+    validate(userValidators.updateUser),
+    auditLogger('UPDATE', 'USER'),
+    authController.updateUser
 );
 
 module.exports = router;

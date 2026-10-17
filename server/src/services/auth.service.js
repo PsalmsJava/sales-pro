@@ -71,6 +71,59 @@ class AuthService {
         }
     }
 
+    async listUsers() {
+        try {
+            const users = await userRepository.findAll({});
+            return users.map(user => this.sanitizeUser(user));
+        } catch (error) {
+            logger.error('List users service error', { error: error.message });
+            throw error;
+        }
+    }
+
+    async updateUser(userId, updateData, actorId) {
+        try {
+            const user = await userRepository.findByIdAny(userId);
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            // Guard: admin cannot demote or deactivate themselves
+            if (userId === actorId) {
+                if (updateData.isActive === false) {
+                    throw new Error('You cannot deactivate your own account');
+                }
+                if (updateData.role && updateData.role !== user.role) {
+                    throw new Error('You cannot change your own role');
+                }
+            }
+
+            const dbUpdate = {};
+            if (updateData.firstName) dbUpdate.first_name = updateData.firstName;
+            if (updateData.lastName) dbUpdate.last_name = updateData.lastName;
+            if (updateData.phone !== undefined) dbUpdate.phone = updateData.phone;
+            if (updateData.role) dbUpdate.role = updateData.role;
+            if (updateData.isActive !== undefined) dbUpdate.is_active = updateData.isActive;
+
+            if (Object.keys(dbUpdate).length === 0) {
+                return this.sanitizeUser(user);
+            }
+
+            const updated = await userRepository.update(userId, dbUpdate);
+
+            logger.info('User updated successfully', {
+                userId,
+                updatedBy: actorId,
+                fields: Object.keys(dbUpdate)
+            });
+
+            return this.sanitizeUser(updated);
+        } catch (error) {
+            logger.error('Update user service error', { error: error.message, userId });
+            throw error;
+        }
+    }
+
     async refreshToken(refreshToken) {
         try {
             const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);

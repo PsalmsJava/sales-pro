@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard, Package, Users, Truck, DollarSign,
-    Settings, Menu, X, Bell, Moon, Sun, ChevronLeft,
+    Menu, X, Bell, Moon, Sun, ChevronLeft,
     ShoppingCart, LogOut, Home, Activity, UserCheck,
     Building2, Percent, Layers, Search, ChevronRight, Megaphone,
     Zap, TrendingUp, Shield, Star
@@ -38,7 +38,8 @@ const AdminLayout = () => {
     const unreadCount = notifications.filter(n => n.unread).length;
 
     const getNavigation = () => {
-        if (user?.role === 'inventory_manager') {
+        const role = user?.role;
+        if (role === 'inventory_manager') {
             return [
                 {
                     section: 'DASHBOARD',
@@ -54,7 +55,7 @@ const AdminLayout = () => {
                 }
             ];
         }
-        if (user?.role === 'head_of_sales') {
+        if (role === 'head_of_sales') {
             return [
                 {
                     section: 'DASHBOARD',
@@ -71,40 +72,41 @@ const AdminLayout = () => {
                 }
             ];
         }
+        // Admin & Manager: full operating dashboard.
+        // Only admin manages users (role assignment).
+        const base = role === 'manager' ? '/manager/dashboard' : '/admin/dashboard';
+        const people = [
+            { path: `${base}/sales-reps`, icon: UserCheck, label: 'Sales Team' },
+            { path: `${base}/dispatch`, icon: Truck, label: 'Dispatch' },
+        ];
+        if (role === 'admin') {
+            people.unshift({ path: '/admin/dashboard/users', icon: Users, label: 'Users & Roles' });
+        }
         return [
             {
                 section: 'DASHBOARD',
                 items: [
-                    { path: '/admin/dashboard', icon: Home, label: 'Home', end: true },
-                    { path: '/admin/dashboard/analytics', icon: Activity, label: 'Analytics' },
+                    { path: base, icon: Home, label: 'Home', end: true },
+                    { path: `${base}/analytics`, icon: Activity, label: 'Analytics' },
                 ]
             },
             {
                 section: 'OPERATIONS',
                 items: [
-                    { path: '/admin/dashboard/products', icon: Package, label: 'Products' },
-                    { path: '/admin/dashboard/orders', icon: ShoppingCart, label: 'Orders' },
-                    { path: '/admin/dashboard/ads', icon: Megaphone, label: 'Marketing' },
+                    { path: `${base}/products`, icon: Package, label: 'Products' },
+                    { path: `${base}/orders`, icon: ShoppingCart, label: 'Orders' },
+                    { path: `${base}/ads`, icon: Megaphone, label: 'Marketing' },
                 ]
             },
             {
                 section: 'PEOPLE',
-                items: [
-                    { path: '/admin/dashboard/sales-reps', icon: UserCheck, label: 'Sales Team' },
-                    { path: '/admin/dashboard/dispatch', icon: Truck, label: 'Dispatch' },
-                ]
+                items: people,
             },
             {
                 section: 'FINANCE',
                 items: [
-                    { path: '/admin/dashboard/commissions', icon: Percent, label: 'Commissions' },
-                    { path: '/admin/dashboard/payments', icon: DollarSign, label: 'Payments' },
-                ]
-            },
-            {
-                section: 'SYSTEM',
-                items: [
-                    { path: '/admin/dashboard/settings', icon: Settings, label: 'Settings' },
+                    { path: `${base}/commissions`, icon: Percent, label: 'Commissions' },
+                    { path: `${base}/payments`, icon: DollarSign, label: 'Payments' },
                 ]
             },
         ];

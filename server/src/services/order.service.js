@@ -379,6 +379,7 @@ class OrderService {
 
         const roleTransitions = {
             admin: ['pending', 'assigned', 'confirmed', 'processing', 'dispatched', 'delivered', 'completed', 'cancelled'],
+            manager: ['pending', 'assigned', 'confirmed', 'processing', 'dispatched', 'delivered', 'completed', 'cancelled'],
             head_of_sales: ['pending', 'assigned', 'confirmed', 'processing', 'dispatched', 'delivered', 'completed', 'cancelled'],
             sales_rep: ['confirmed', 'processing', 'cancelled'],
             dispatch_partner: ['dispatched', 'delivered']

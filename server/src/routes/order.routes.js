@@ -15,10 +15,10 @@ router.post(
 // Protected routes
 router.use(authenticate);
 
-// Admin & Head of Sales routes
+// Admin, Manager & Head of Sales routes
 router.post(
     '/assign',
-    authorize('admin', 'head_of_sales'),
+    authorize('admin', 'manager', 'head_of_sales'),
     auditLogger('ASSIGN', 'ORDER'),
     orderController.assignOrders
 );

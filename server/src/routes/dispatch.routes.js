@@ -25,17 +25,17 @@ router.patch(
     dispatchController.updateDeliveryStatus
 );
 
-// Admin routes
-router.get('/partners', authorize('admin'), dispatchController.getAllPartners);
+// Admin & Manager routes
+router.get('/partners', authorize('admin', 'manager'), dispatchController.getAllPartners);
 router.post(
     '/partners/:id/verify',
-    authorize('admin'),
+    authorize('admin', 'manager'),
     auditLogger('VERIFY', 'DISPATCH_PARTNER'),
     dispatchController.verifyPartner
 );
 router.post(
     '/assign',
-    authorize('admin'),
+    authorize('admin', 'manager'),
     validate(dispatchValidators.assignDelivery),
     auditLogger('ASSIGN', 'DISPATCH'),
     dispatchController.assignDelivery

@@ -26,12 +26,21 @@ const authValidators = {
 const userValidators = {
     createUser: Joi.object({
         email: Joi.string().email().required(),
-        password: Joi.string().pattern(passwordPattern).required(),
+        password: Joi.string().pattern(passwordPattern).required().messages({
+            'string.pattern.base': 'Password must be at least 8 characters with uppercase, lowercase, number and special character'
+        }),
         firstName: Joi.string().trim().min(2).max(100).required(),
         lastName: Joi.string().trim().min(2).max(100).required(),
         phone: Joi.string().optional(),
-        role: Joi.string().valid('admin', 'sales_rep', 'dispatch_partner', 'head_of_sales', 'inventory_manager').required()
-    })
+        role: Joi.string().valid('admin', 'manager', 'head_of_sales', 'inventory_manager', 'sales_rep', 'dispatch_partner').required()
+    }),
+    updateUser: Joi.object({
+        firstName: Joi.string().trim().min(2).max(100),
+        lastName: Joi.string().trim().min(2).max(100),
+        phone: Joi.string().allow('').optional(),
+        role: Joi.string().valid('admin', 'manager', 'head_of_sales', 'inventory_manager', 'sales_rep', 'dispatch_partner'),
+        isActive: Joi.boolean()
+    }).min(1)
 };
 
 const productValidators = {

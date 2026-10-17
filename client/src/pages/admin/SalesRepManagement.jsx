@@ -200,7 +200,7 @@ const SalesRepManagement = () => {
                                     <button onClick={() => setResetPasswordRep(rep)} className="p-2 text-slate-400 hover:text-gold-600 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors" title="Reset Password">
                                         <KeyIcon className="w-4 h-4" />
                                     </button>
-                                    {(user?.role === 'admin' || user?.role === 'head_of_sales') && (
+                                    {(user?.role === 'admin' || user?.role === 'manager' || user?.role === 'head_of_sales') && (
                                         <button
                                             onClick={() => setToggleRep({ id: rep.id, action: rep.isActive ? 'deactivate' : 'reactivate', name: `${rep.firstName} ${rep.lastName}` })}
                                             className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors ${rep.isActive ? 'text-slate-400 hover:text-rose-600' : 'text-slate-400 hover:text-emerald-600'}`}
@@ -266,7 +266,9 @@ const SalesRepManagement = () => {
                         <div className="pt-2 border-t border-slate-100 dark:border-brand-700">
                             <button
                                 onClick={() => {
-                                    const basePath = user?.role === 'head_of_sales' ? '/head-of-sales/dashboard/orders' : '/admin/dashboard/orders';
+                                    const basePath = user?.role === 'head_of_sales' ? '/head-of-sales/dashboard/orders'
+                                        : user?.role === 'manager' ? '/manager/dashboard/orders'
+                                            : '/admin/dashboard/orders';
                                     navigate(basePath);
                                     setViewingRep(null);
                                 }}

@@ -44,6 +44,45 @@ class AuthController {
         }
     }
 
+    async getUsers(req, res, next) {
+        try {
+            const users = await authService.listUsers();
+
+            res.json({
+                success: true,
+                data: users
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async updateUser(req, res, next) {
+        try {
+            const user = await authService.updateUser(req.params.id, req.body, req.user.id);
+
+            res.json({
+                success: true,
+                message: 'User updated successfully',
+                data: user
+            });
+        } catch (error) {
+            if (error.message === 'User not found') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+            if (error.message.includes('cannot')) {
+                return res.status(400).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+            next(error);
+        }
+    }
+
     async refreshToken(req, res, next) {
         try {
             const { refreshToken } = req.body;

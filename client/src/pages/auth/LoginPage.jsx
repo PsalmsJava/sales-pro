@@ -35,6 +35,7 @@ const LoginPage = () => {
             toast.success(`Welcome back, ${result.user.firstName}!`);
             const routes = {
                 admin: '/admin/dashboard',
+                manager: '/manager/dashboard',
                 sales_rep: '/sales-rep/dashboard',
                 dispatch_partner: '/dispatch/dashboard',
                 head_of_sales: '/head-of-sales/dashboard',

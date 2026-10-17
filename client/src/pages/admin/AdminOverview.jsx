@@ -18,7 +18,12 @@ const AdminOverview = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const isHeadOfSales = user?.role === 'head_of_sales';
-    const basePath = isHeadOfSales ? '/head-of-sales/dashboard' : '/admin/dashboard';
+    const basePathByRole = {
+        admin: '/admin/dashboard',
+        manager: '/manager/dashboard',
+        head_of_sales: '/head-of-sales/dashboard',
+    };
+    const basePath = basePathByRole[user?.role] || '/admin/dashboard';
     const { data, isLoading } = useQuery({
         queryKey: ['admin-dashboard'],
         queryFn: adminService.getDashboardStats,

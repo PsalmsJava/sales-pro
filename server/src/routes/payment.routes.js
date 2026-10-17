@@ -22,14 +22,14 @@ router.post(
     paymentController.initializePayment
 );
 
-// Admin routes
-router.get('/config', authorize('admin'), paymentController.getPaymentConfig);
+// Admin & Manager routes
+router.get('/config', authorize('admin', 'manager'), paymentController.getPaymentConfig);
 router.post(
     '/toggle-method',
-    authorize('admin'),
+    authorize('admin', 'manager'),
     validate(paymentValidators.toggleMethod),
     paymentController.togglePaymentMethod
 );
-router.get('/transactions', authorize('admin'), paymentController.getTransactionHistory);
+router.get('/transactions', authorize('admin', 'manager'), paymentController.getTransactionHistory);
 
 module.exports = router;

@@ -9,6 +9,12 @@ class User {
             .first();
     }
 
+    static async findByIdAny(id) {
+        return db(this.tableName)
+            .where({ id })
+            .first();
+    }
+
     static async findByEmail(email) {
         if (!email) return null;
         const normalized = email.toLowerCase().trim();
