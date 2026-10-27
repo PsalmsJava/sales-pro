@@ -45,4 +45,20 @@ router.post(
     salesRepController.resetPassword
 );
 
+// Soft delete - Only Head of Sales can delete sales reps
+router.delete(
+    '/:id',
+    authorize('head_of_sales'),
+    auditLogger('SOFT_DELETE', 'SALES_REP'),
+    salesRepController.softDeleteSalesRep
+);
+
+// Final / Permanent delete - Only Admin
+router.delete(
+    '/:id/permanent',
+    authorize('admin'),
+    auditLogger('PERMANENT_DELETE', 'SALES_REP'),
+    salesRepController.permanentDeleteSalesRep
+);
+
 module.exports = router;

@@ -24,6 +24,14 @@ const salesRepService = {
     async resetPassword(id) {
         const response = await api.post(`/sales-reps/${id}/reset-password`);
         return response.data;
+    },
+    async softDeleteSalesRep(id) {
+        const response = await api.delete(`/sales-reps/${id}`);
+        return response.data;
+    },
+    async permanentDeleteSalesRep(id) {
+        const response = await api.delete(`/sales-reps/${id}/permanent`);
+        return response.data;
     }
 };
 

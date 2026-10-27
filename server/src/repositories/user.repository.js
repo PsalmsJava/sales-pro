@@ -72,7 +72,16 @@ class UserRepository {
         try {
             await User.softDelete(id);
         } catch (error) {
-            logger.error('Error deleting user', { error: error.message, userId: id });
+            logger.error('Error soft deleting user', { error: error.message, userId: id });
+            throw error;
+        }
+    }
+
+    async hardDelete(id) {
+        try {
+            await User.hardDelete(id);
+        } catch (error) {
+            logger.error('Error hard deleting user', { error: error.message, userId: id });
             throw error;
         }
     }

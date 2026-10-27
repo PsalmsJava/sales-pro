@@ -138,6 +138,44 @@ class SalesRepController {
             next(error);
         }
     }
+
+    async softDeleteSalesRep(req, res, next) {
+        try {
+            const result = await salesRepService.softDeleteSalesRep(req.params.id, req.user.id);
+
+            res.json({
+                success: true,
+                message: result.message
+            });
+        } catch (error) {
+            if (error.message.includes('not found')) {
+                return res.status(404).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+            next(error);
+        }
+    }
+
+    async permanentDeleteSalesRep(req, res, next) {
+        try {
+            const result = await salesRepService.permanentDeleteSalesRep(req.params.id, req.user.id);
+
+            res.json({
+                success: true,
+                message: result.message
+            });
+        } catch (error) {
+            if (error.message.includes('not found')) {
+                return res.status(404).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+            next(error);
+        }
+    }
 }
 
 module.exports = new SalesRepController();

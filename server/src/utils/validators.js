@@ -73,7 +73,7 @@ const orderValidators = {
         productId: Joi.string().uuid().required(),
         quantity: Joi.number().integer().min(1).required(),
         paymentMethod: Joi.string().valid('online', 'delivery').required(),
-        notes: Joi.string().max(500).optional(),
+        notes: Joi.string().max(500).allow('', null).optional(),
         customer: Joi.object({
             firstName: Joi.string().trim().min(2).max(100).required(),
             lastName: Joi.string().trim().min(2).max(100).required(),
@@ -83,9 +83,11 @@ const orderValidators = {
             city: Joi.string().required(),
             state: Joi.string().required()
         }).required(),
-        utm_source: Joi.string().optional(),
-        utm_medium: Joi.string().optional(),
-        utm_campaign: Joi.string().optional()
+        utm_source: Joi.string().allow('', null).optional(),
+        utm_medium: Joi.string().allow('', null).optional(),
+        utm_campaign: Joi.string().allow('', null).optional(),
+        utm_content: Joi.string().allow('', null).optional(),
+        utm_term: Joi.string().allow('', null).optional()
     }),
     updateStatus: Joi.object({
         status: Joi.string().valid(

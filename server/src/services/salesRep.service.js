@@ -200,6 +200,48 @@ class SalesRepService {
         }
     }
 
+    async softDeleteSalesRep(salesRepId, userId) {
+        try {
+            const user = await userRepository.findById(salesRepId);
+            if (!user || user.role !== 'sales_rep') {
+                throw new Error('Sales representative not found');
+            }
+
+            await userRepository.softDelete(salesRepId);
+
+            logger.warn('Sales rep soft-deleted by head of sales', {
+                salesRepId,
+                deletedBy: userId
+            });
+
+            return { message: 'Sales representative soft-deleted successfully' };
+        } catch (error) {
+            logger.error('Soft delete sales rep error', { error: error.message, salesRepId });
+            throw error;
+        }
+    }
+
+    async permanentDeleteSalesRep(salesRepId, userId) {
+        try {
+            const user = await userRepository.findByIdAny(salesRepId);
+            if (!user || user.role !== 'sales_rep') {
+                throw new Error('Sales representative not found');
+            }
+
+            await userRepository.hardDelete(salesRepId);
+
+            logger.warn('Sales rep permanently deleted by admin', {
+                salesRepId,
+                deletedBy: userId
+            });
+
+            return { message: 'Sales representative permanently deleted successfully' };
+        } catch (error) {
+            logger.error('Permanent delete sales rep error', { error: error.message, salesRepId });
+            throw error;
+        }
+    }
+
     async resetPassword(salesRepId, adminId) {
         try {
             const user = await userRepository.findById(salesRepId);

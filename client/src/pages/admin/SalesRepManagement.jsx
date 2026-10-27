@@ -5,7 +5,8 @@ import {
     UsersIcon, PlusIcon, PencilIcon, KeyIcon,
     EyeIcon, UserMinusIcon, UserPlusIcon,
     MagnifyingGlassIcon, PhoneIcon, EnvelopeIcon,
-    CheckCircleIcon, XCircleIcon, CurrencyDollarIcon
+    CheckCircleIcon, XCircleIcon, CurrencyDollarIcon,
+    TrashIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import salesRepService from '../../services/salesRepService';
@@ -21,6 +22,8 @@ import { useNavigate } from 'react-router-dom';
 
 const SalesRepManagement = () => {
     const { user } = useAuth();
+    const canSoftDelete = user?.role === 'head_of_sales';
+    const canPermanentDelete = user?.role === 'admin';
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [showForm, setShowForm] = useState(false);
@@ -28,6 +31,7 @@ const SalesRepManagement = () => {
     const [viewingRep, setViewingRep] = useState(null);
     const [resetPasswordRep, setResetPasswordRep] = useState(null);
     const [toggleRep, setToggleRep] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const [credentials, setCredentials] = useState(null);
     const queryClient = useQueryClient();
 
@@ -52,6 +56,30 @@ const SalesRepManagement = () => {
             setResetPasswordRep(null);
             toast.success('Password reset successfully');
         },
+    });
+
+    const softDeleteMutation = useMutation({
+        mutationFn: (id) => salesRepService.softDeleteSalesRep(id),
+        onSuccess: (data) => {
+            toast.success(data?.message || 'Sales representative soft-deleted successfully');
+            queryClient.invalidateQueries(['sales-reps']);
+            setDeleteTarget(null);
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || 'Failed to soft delete sales representative');
+        }
+    });
+
+    const permanentDeleteMutation = useMutation({
+        mutationFn: (id) => salesRepService.permanentDeleteSalesRep(id),
+        onSuccess: (data) => {
+            toast.success(data?.message || 'Sales representative permanently deleted');
+            queryClient.invalidateQueries(['sales-reps']);
+            setDeleteTarget(null);
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || 'Failed to permanently delete sales representative');
+        }
     });
 
     const filteredReps = salesReps?.filter(rep => {
@@ -203,10 +231,30 @@ const SalesRepManagement = () => {
                                     {(user?.role === 'admin' || user?.role === 'manager' || user?.role === 'head_of_sales') && (
                                         <button
                                             onClick={() => setToggleRep({ id: rep.id, action: rep.isActive ? 'deactivate' : 'reactivate', name: `${rep.firstName} ${rep.lastName}` })}
-                                            className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors ${rep.isActive ? 'text-slate-400 hover:text-rose-600' : 'text-slate-400 hover:text-emerald-600'}`}
+                                            className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-brand-800 transition-colors ${rep.isActive ? 'text-slate-400 hover:text-amber-600' : 'text-slate-400 hover:text-emerald-600'}`}
                                             title={rep.isActive ? 'Deactivate' : 'Reactivate'}
                                         >
                                             {rep.isActive ? <UserMinusIcon className="w-4 h-4" /> : <UserPlusIcon className="w-4 h-4" />}
+                                        </button>
+                                    )}
+                                    {/* Head of Sales can Soft Delete */}
+                                    {canSoftDelete && rep.isActive && (
+                                        <button
+                                            onClick={() => setDeleteTarget({ id: rep.id, name: `${rep.firstName} ${rep.lastName}`, type: 'soft' })}
+                                            className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                                            title="Soft Delete (Head of Sales)"
+                                        >
+                                            <TrashIcon className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    {/* Admin can Final / Permanently Delete */}
+                                    {canPermanentDelete && (
+                                        <button
+                                            onClick={() => setDeleteTarget({ id: rep.id, name: `${rep.firstName} ${rep.lastName}`, type: 'permanent' })}
+                                            className="p-2 text-rose-500 hover:text-rose-700 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors"
+                                            title="Permanent Delete (Admin Only)"
+                                        >
+                                            <TrashIcon className="w-4 h-4" />
                                         </button>
                                     )}
                                 </div>
@@ -328,6 +376,62 @@ const SalesRepManagement = () => {
                 <p className="text-slate-600 dark:text-slate-400">
                     Are you sure you want to {toggleRep?.action} <strong>{toggleRep?.name}</strong>?
                 </p>
+            </Modal>
+
+            {/* Delete Confirmation Modal (Soft Delete for Head of Sales, Permanent Delete for Admin) */}
+            <Modal
+                isOpen={!!deleteTarget}
+                onClose={() => setDeleteTarget(null)}
+                title={deleteTarget?.type === 'permanent' ? 'Permanently Delete Sales Rep' : 'Soft Delete Sales Rep'}
+                subtitle={deleteTarget?.name}
+                size="sm"
+                loading={deleteTarget?.type === 'permanent' ? permanentDeleteMutation.isLoading : softDeleteMutation.isLoading}
+                footer={
+                    <>
+                        <button
+                            onClick={() => setDeleteTarget(null)}
+                            className="px-5 py-2.5 border-2 border-slate-300 dark:border-brand-600 rounded-xl hover:bg-white dark:hover:bg-brand-800 transition font-medium text-sm"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (deleteTarget?.type === 'permanent') {
+                                    permanentDeleteMutation.mutate(deleteTarget.id);
+                                } else {
+                                    softDeleteMutation.mutate(deleteTarget.id);
+                                }
+                            }}
+                            disabled={deleteTarget?.type === 'permanent' ? permanentDeleteMutation.isLoading : softDeleteMutation.isLoading}
+                            className="px-6 py-2.5 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl transition-all font-semibold text-sm shadow-lg shadow-rose-500/25"
+                        >
+                            {deleteTarget?.type === 'permanent'
+                                ? (permanentDeleteMutation.isLoading ? 'Deleting...' : 'Permanent Delete')
+                                : (softDeleteMutation.isLoading ? 'Deleting...' : 'Soft Delete')}
+                        </button>
+                    </>
+                }
+            >
+                {deleteTarget?.type === 'permanent' ? (
+                    <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                        <p className="font-semibold text-rose-600 dark:text-rose-400">⚠️ Irreversible Action</p>
+                        <p>
+                            Are you sure you want to permanently delete <strong>{deleteTarget?.name}</strong> from the database?
+                        </p>
+                        <p className="text-xs text-slate-500">
+                            This will completely remove the user record and cascade commission configurations. Only platform Admins can perform this action.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                        <p>
+                            Are you sure you want to soft delete <strong>{deleteTarget?.name}</strong>?
+                        </p>
+                        <p className="text-xs text-slate-500">
+                            This will deactivate the sales representative and remove them from active sales operations. Permanent deletion can only be performed by an Admin.
+                        </p>
+                    </div>
+                )}
             </Modal>
         </div>
     );

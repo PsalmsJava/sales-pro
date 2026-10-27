@@ -32,9 +32,9 @@ class OrderRepository {
                 address: orderData.customer.address,
                 city: orderData.customer.city,
                 state: orderData.customer.state,
-                utm_source: orderData.utmSource,
-                utm_medium: orderData.utmMedium,
-                utm_campaign: orderData.utmCampaign
+                utm_source: orderData.utmSource || null,
+                utm_medium: orderData.utmMedium || null,
+                utm_campaign: orderData.utmCampaign || null
             }).returning('*');
 
             const [order] = await trx('orders').insert({
@@ -45,7 +45,7 @@ class OrderRepository {
                 payment_method: orderData.paymentMethod,
                 status: 'pending',
                 is_paid: orderData.paymentMethod === 'online',
-                notes: orderData.notes
+                notes: orderData.notes || null
             }).returning('*');
 
             await trx.commit();

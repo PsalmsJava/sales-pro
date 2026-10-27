@@ -72,7 +72,16 @@ class User {
     static async softDelete(id) {
         return db(this.tableName)
             .where({ id })
-            .update({ is_active: false });
+            .update({
+                is_active: false,
+                updated_at: new Date()
+            });
+    }
+
+    static async hardDelete(id) {
+        return db(this.tableName)
+            .where({ id })
+            .del();
     }
 }
 
