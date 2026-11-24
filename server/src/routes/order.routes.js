@@ -36,6 +36,14 @@ router.patch(
     orderController.updateOrderStatus
 );
 
+router.put(
+    '/:id/reassign',
+    authorize('admin', 'head_of_sales'),
+    validate(orderValidators.reassignOrder),
+    auditLogger('REASSIGN', 'ORDER'),
+    orderController.reassignOrder
+);
+
 router.put('/:id/reschedule', authenticate, authorize('sales_rep', 'admin'), orderController.rescheduleOrder);
 router.post('/:id/callback', authenticate, authorize('sales_rep', 'admin'), orderController.scheduleCallback);
 router.post('/:id/log-issue', authenticate, authorize('sales_rep', 'admin'), orderController.logIssue);

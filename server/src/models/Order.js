@@ -21,7 +21,9 @@ class Order {
                 'customers.city as customer_city',
                 'customers.state as customer_state',
                 'sales_rep.first_name as sales_rep_first_name',
-                'sales_rep.last_name as sales_rep_last_name'
+                'sales_rep.last_name as sales_rep_last_name',
+                'sales_rep.email as sales_rep_email',
+                'sales_rep.phone as sales_rep_phone'
             )
             .where('orders.id', id)
             .first();
@@ -88,7 +90,9 @@ class Order {
                 'customers.city as customer_city',
                 'customers.state as customer_state',
                 'sales_rep.first_name as sales_rep_first_name',
-                'sales_rep.last_name as sales_rep_last_name'
+                'sales_rep.last_name as sales_rep_last_name',
+                'sales_rep.email as sales_rep_email',
+                'sales_rep.phone as sales_rep_phone'
             );
 
         if (filters.status) {

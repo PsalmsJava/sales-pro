@@ -229,6 +229,40 @@ class OrderController {
         }
     }
 
+    // Admin / Head of Sales - Reassign an order to another sales rep
+    async reassignOrder(req, res, next) {
+        try {
+            const { salesRepId } = req.body;
+            const order = await orderService.reassignOrder(
+                req.params.id,
+                salesRepId,
+                req.user.id,
+                req.user.role
+            );
+
+            res.json({
+                success: true,
+                message: 'Order reassigned successfully',
+                data: order
+            });
+        } catch (error) {
+            if (error.message === 'Order not found') {
+                return res.status(404).json({ success: false, message: error.message });
+            }
+            if (error.message.includes('permission') || error.message.includes('Only Head of Sales and Admin')) {
+                return res.status(403).json({ success: false, message: error.message });
+            }
+            if (
+                error.message.includes('Cannot reassign') ||
+                error.message.includes('sales representative') ||
+                error.message.includes('inactive')
+            ) {
+                return res.status(400).json({ success: false, message: error.message });
+            }
+            next(error);
+        }
+    }
+
     // Sales reps: get their own due callbacks
     async getMyCallbacks(req, res, next) {
         try {

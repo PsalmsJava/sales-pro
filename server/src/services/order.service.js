@@ -323,6 +323,44 @@ class OrderService {
         }
     }
 
+    async reassignOrder(id, salesRepId, userId, userRole) {
+        try {
+            if (!['admin', 'head_of_sales'].includes(userRole)) {
+                throw new Error('Only Head of Sales and Admin can reassign orders');
+            }
+
+            const order = await orderRepository.findById(id);
+            if (!order) {
+                throw new Error('Order not found');
+            }
+
+            const terminalStatuses = ['delivered', 'completed', 'cancelled'];
+            if (terminalStatuses.includes(order.status)) {
+                throw new Error(`Cannot reassign an order that is already ${order.status}`);
+            }
+
+            const salesRep = await userRepository.findById(salesRepId);
+            if (!salesRep || salesRep.role !== 'sales_rep') {
+                throw new Error('Selected sales representative is invalid or inactive');
+            }
+
+            const updated = await orderRepository.reassignSalesRep(id, salesRepId, order.status);
+
+            logger.info('Order reassigned successfully', {
+                orderId: id,
+                previousSalesRepId: order.sales_rep_id,
+                newSalesRepId: salesRepId,
+                reassignedBy: userId,
+                reassignedByRole: userRole
+            });
+
+            return this.formatOrder(updated);
+        } catch (error) {
+            logger.error('Reassign order error', { error: error.message, orderId: id, salesRepId });
+            throw error;
+        }
+    }
+
     async getSalesRepStats(salesRepId) {
         try {
             const stats = await orderRepository.getSalesRepStats(salesRepId);
@@ -425,9 +463,14 @@ class OrderService {
                 city: order.customer_city,
                 state: order.customer_state
             },
+            salesRepId: order.sales_rep_id || null,
             salesRep: order.sales_rep_first_name ? {
+                id: order.sales_rep_id,
                 firstName: order.sales_rep_first_name,
-                lastName: order.sales_rep_last_name
+                lastName: order.sales_rep_last_name,
+                fullName: `${order.sales_rep_first_name} ${order.sales_rep_last_name}`,
+                email: order.sales_rep_email,
+                phone: order.sales_rep_phone
             } : null,
             deliveredAt: order.delivered_at,
             createdAt: order.created_at,

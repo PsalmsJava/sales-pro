@@ -14,7 +14,8 @@ class OrderRepository {
                 'customers.first_name as customer_first_name', 'customers.last_name as customer_last_name',
                 'customers.email as customer_email', 'customers.phone as customer_phone',
                 'customers.address as customer_address', 'customers.city as customer_city', 'customers.state as customer_state',
-                'sales_rep.first_name as sales_rep_first_name', 'sales_rep.last_name as sales_rep_last_name'
+                'sales_rep.first_name as sales_rep_first_name', 'sales_rep.last_name as sales_rep_last_name',
+                'sales_rep.email as sales_rep_email', 'sales_rep.phone as sales_rep_phone'
             )
             .first();
         if (!order) throw new Error('Order not found');
@@ -70,7 +71,8 @@ class OrderRepository {
                 'customers.first_name as customer_first_name', 'customers.last_name as customer_last_name',
                 'customers.email as customer_email', 'customers.phone as customer_phone',
                 'customers.address as customer_address', 'customers.city as customer_city', 'customers.state as customer_state',
-                'sales_rep.first_name as sales_rep_first_name', 'sales_rep.last_name as sales_rep_last_name'
+                'sales_rep.first_name as sales_rep_first_name', 'sales_rep.last_name as sales_rep_last_name',
+                'sales_rep.email as sales_rep_email', 'sales_rep.phone as sales_rep_phone'
             );
 
         if (filters.status) {
@@ -212,6 +214,26 @@ class OrderRepository {
             .update({ sales_rep_id: salesRepId, status: 'assigned', updated_at: new Date() })
             .returning('*');
         return updated;
+    }
+
+    async reassignSalesRep(id, salesRepId, currentStatus) {
+        const updateData = {
+            sales_rep_id: salesRepId,
+            updated_at: new Date()
+        };
+        // If order was pending, progress it to assigned
+        if (currentStatus === 'pending') {
+            updateData.status = 'assigned';
+        }
+
+        const [updated] = await db('orders')
+            .where({ id })
+            .update(updateData)
+            .returning('*');
+
+        if (!updated) throw new Error('Order not found');
+
+        return this.findById(id);
     }
 
     async getSalesRepOrderCount(salesRepId, status = null) {

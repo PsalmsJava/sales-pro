@@ -94,6 +94,12 @@ const orderValidators = {
             'pending', 'assigned', 'confirmed', 'processing',
             'dispatched', 'delivered', 'completed', 'cancelled'
         ).required()
+    }),
+    reassignOrder: Joi.object({
+        salesRepId: Joi.string().uuid().required().messages({
+            'string.guid': 'A valid Sales Rep ID is required',
+            'any.required': 'Sales Rep ID is required'
+        })
     })
 };
 

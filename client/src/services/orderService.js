@@ -17,6 +17,10 @@ const orderService = {
         const response = await api.post('/orders/assign');
         return response.data;
     },
+    async reassignOrder(id, salesRepId) {
+        const response = await api.put(`/orders/${id}/reassign`, { salesRepId });
+        return response.data;
+    },
     async rescheduleOrder(id, data) {
         const response = await api.put(`/orders/${id}/reschedule`, data);
         return response.data;

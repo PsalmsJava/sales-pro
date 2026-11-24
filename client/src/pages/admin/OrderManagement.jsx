@@ -5,17 +5,21 @@ import {
     ShoppingCart, Search, Filter, Download, Eye, Truck,
     CheckCircle, XCircle, Clock, Users, MoreHorizontal,
     MapPin, Phone, Mail, Package, ChevronDown, Calendar,
-    SlidersHorizontal, RefreshCw, ArrowUpDown, DollarSign, Copy
+    SlidersHorizontal, RefreshCw, ArrowUpDown, DollarSign, Copy,
+    UserCheck, UserX, UserPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import orderService from '../../services/orderService';
+import salesRepService from '../../services/salesRepService';
 import CustomerDetailsSection from '../../components/orders/CustomerDetailsSection';
 import { copyToClipboard, formatCustomerForRider } from '../../utils/orderUtils';
+import { useAuth } from '../../context/AuthContext';
 import StatCard from '../../components/ui/StatCard';
 import SectionCard from '../../components/ui/SectionCard';
 import StatusBadge from '../../components/ui/StatusBadge';
 import EmptyState from '../../components/ui/EmptyState';
 import Pagination from '../../components/ui/Pagination';
+import Modal from '../../components/ui/Modal';
 
 const statusTabs = [
     { key: '', label: 'All Orders', color: 'slate', icon: ShoppingCart },
@@ -30,14 +34,30 @@ const statusTabs = [
 ];
 
 const OrderManagement = () => {
+    const { user } = useAuth();
+    const canReassign = user && ['admin', 'head_of_sales'].includes(user.role);
+
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState('');
     const [viewingOrder, setViewingOrder] = useState(null);
+    const [reassigningOrder, setReassigningOrder] = useState(null);
+    const [selectedRepId, setSelectedRepId] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [dateRange, setDateRange] = useState('all');
     const [paymentFilter, setPaymentFilter] = useState('all');
     const queryClient = useQueryClient();
+
+    const { data: salesRepsData } = useQuery({
+        queryKey: ['active-sales-reps'],
+        queryFn: () => salesRepService.getAllSalesReps({ isActive: true }),
+        enabled: !!canReassign
+    });
+
+    const salesReps = useMemo(() => {
+        if (!salesRepsData) return [];
+        return Array.isArray(salesRepsData) ? salesRepsData : (salesRepsData.data || []);
+    }, [salesRepsData]);
 
     const { data: ordersData, isLoading } = useQuery({
         queryKey: ['orders', { search, page, status: statusFilter, dateRange, paymentFilter }],
@@ -50,6 +70,20 @@ const OrderManagement = () => {
             toast.success(`${data.data?.length || 0} orders auto-assigned`);
             queryClient.invalidateQueries(['orders']);
         },
+    });
+
+    const reassignMutation = useMutation({
+        mutationFn: ({ orderId, salesRepId }) => orderService.reassignOrder(orderId, salesRepId),
+        onSuccess: (data) => {
+            toast.success(data?.message || 'Order reassigned successfully');
+            queryClient.invalidateQueries(['orders']);
+            if (viewingOrder && data?.data) {
+                setViewingOrder(data.data);
+            }
+            setReassigningOrder(null);
+            setSelectedRepId('');
+        },
+        onError: (error) => toast.error(error.response?.data?.message || 'Failed to reassign order')
     });
 
     const statusMutation = useMutation({
@@ -196,6 +230,7 @@ const OrderManagement = () => {
                                         <th className="px-4 py-4 text-left text-xs font-semibold text-slate-500 uppercase">Order</th>
                                         <th className="px-4 py-4 text-left text-xs font-semibold text-slate-500 uppercase">Product</th>
                                         <th className="px-4 py-4 text-left text-xs font-semibold text-slate-500 uppercase">Customer</th>
+                                        <th className="px-4 py-4 text-left text-xs font-semibold text-slate-500 uppercase">Assigned Rep</th>
                                         <th className="px-4 py-4 text-right text-xs font-semibold text-slate-500 uppercase">Amount</th>
                                         <th className="px-4 py-4 text-center text-xs font-semibold text-slate-500 uppercase">Status</th>
                                         <th className="px-4 py-4 text-center text-xs font-semibold text-slate-500 uppercase">Payment</th>
@@ -231,6 +266,25 @@ const OrderManagement = () => {
                                                     </a>
                                                 )}
                                             </td>
+                                            <td className="px-4 py-4">
+                                                {order.salesRep ? (
+                                                    <div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                                            <span className="text-sm font-medium text-brand-800 dark:text-white">
+                                                                {order.salesRep.firstName} {order.salesRep.lastName}
+                                                            </span>
+                                                        </div>
+                                                        {order.salesRep.phone && (
+                                                            <span className="text-xs text-slate-400 block mt-0.5">{order.salesRep.phone}</span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2.5 py-1 rounded-full font-medium border border-amber-200 dark:border-amber-800">
+                                                        <UserX className="w-3 h-3" /> Unassigned
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="px-4 py-4 text-sm font-bold text-right">₦{order.totalAmount?.toFixed(2)}</td>
                                             <td className="px-4 py-4 text-center"><StatusBadge status={order.status} size="sm" /></td>
                                             <td className="px-4 py-4 text-center">
@@ -241,6 +295,19 @@ const OrderManagement = () => {
                                             <td className="px-4 py-4 text-xs text-slate-500 text-center">{new Date(order.createdAt).toLocaleDateString()}</td>
                                             <td className="px-4 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                    {canReassign && !['delivered', 'completed', 'cancelled'].includes(order.status) && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setReassigningOrder(order);
+                                                                setSelectedRepId(order.salesRep?.id || order.salesRepId || '');
+                                                            }}
+                                                            title={order.salesRep ? "Reassign Sales Rep" : "Assign Sales Rep"}
+                                                            className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl hover:bg-slate-100 dark:hover:bg-brand-800 transition-all"
+                                                        >
+                                                            <UserPlus className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                     <button onClick={(e) => {
                                                         e.stopPropagation();
                                                         copyToClipboard(formatCustomerForRider(order)).then(ok => {
@@ -307,6 +374,68 @@ const OrderManagement = () => {
                                 {/* Customer Info */}
                                 <CustomerDetailsSection order={viewingOrder} />
 
+                                {/* Assigned Sales Rep */}
+                                <div className="bg-slate-50 dark:bg-brand-800/50 rounded-2xl p-5">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-sm font-semibold text-brand-800 dark:text-white flex items-center gap-2">
+                                            <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Assigned Sales Rep
+                                        </h3>
+                                        {canReassign && !['delivered', 'completed', 'cancelled'].includes(viewingOrder.status) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setReassigningOrder(viewingOrder);
+                                                    setSelectedRepId(viewingOrder.salesRep?.id || viewingOrder.salesRepId || '');
+                                                }}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-800 dark:hover:bg-brand-700 text-brand-700 dark:text-gold-400 border border-brand-200 dark:border-brand-600 rounded-lg text-xs font-semibold shadow-sm transition active:scale-95"
+                                            >
+                                                <UserPlus className="w-3.5 h-3.5" />
+                                                <span>{viewingOrder.salesRep ? 'Reassign Rep' : 'Assign Rep'}</span>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {viewingOrder.salesRep ? (
+                                        <div className="space-y-1.5">
+                                            <p className="font-semibold text-brand-800 dark:text-white text-base">
+                                                {viewingOrder.salesRep.firstName} {viewingOrder.salesRep.lastName}
+                                            </p>
+                                            {viewingOrder.salesRep.email && (
+                                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                                                    <a href={`mailto:${viewingOrder.salesRep.email}`} className="hover:underline">
+                                                        {viewingOrder.salesRep.email}
+                                                    </a>
+                                                </div>
+                                            )}
+                                            {viewingOrder.salesRep.phone && (
+                                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                                    <a href={`tel:${viewingOrder.salesRep.phone}`} className="hover:underline">
+                                                        {viewingOrder.salesRep.phone}
+                                                    </a>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between py-1">
+                                            <p className="text-sm text-slate-500 italic">No sales rep assigned to this order yet</p>
+                                            {canReassign && !['delivered', 'completed', 'cancelled'].includes(viewingOrder.status) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setReassigningOrder(viewingOrder);
+                                                        setSelectedRepId('');
+                                                    }}
+                                                    className="text-xs font-semibold text-gold-600 dark:text-gold-400 hover:underline"
+                                                >
+                                                    + Assign Now
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Payment Info */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-slate-50 dark:bg-brand-800/50 rounded-2xl p-4">
@@ -345,6 +474,106 @@ const OrderManagement = () => {
                     </>
                 )}
             </AnimatePresence>
+
+            {/* Reassign Order Modal */}
+            <Modal
+                isOpen={!!reassigningOrder}
+                onClose={() => { setReassigningOrder(null); setSelectedRepId(''); }}
+                title={reassigningOrder?.salesRep ? 'Reassign Sales Representative' : 'Assign Sales Representative'}
+                subtitle={reassigningOrder ? `Order #${reassigningOrder.id?.slice(0, 8)} • ${reassigningOrder.productName}` : ''}
+                size="md"
+                loading={reassignMutation.isLoading}
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => { setReassigningOrder(null); setSelectedRepId(''); }}
+                            disabled={reassignMutation.isLoading}
+                            className="px-5 py-2.5 border-2 border-slate-300 dark:border-brand-600 rounded-xl hover:bg-slate-50 dark:hover:bg-brand-800 transition font-medium text-sm"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (!selectedRepId) {
+                                    toast.error('Please select a sales representative');
+                                    return;
+                                }
+                                if (selectedRepId === (reassigningOrder?.salesRep?.id || reassigningOrder?.salesRepId)) {
+                                    toast.error('Order is already assigned to this sales representative');
+                                    return;
+                                }
+                                reassignMutation.mutate({
+                                    orderId: reassigningOrder.id,
+                                    salesRepId: selectedRepId
+                                });
+                            }}
+                            disabled={!selectedRepId || reassignMutation.isLoading || selectedRepId === (reassigningOrder?.salesRep?.id || reassigningOrder?.salesRepId)}
+                            className="px-6 py-2.5 bg-gradient-to-r from-brand-700 to-brand-900 text-white rounded-xl hover:from-brand-800 hover:to-brand-950 transition font-semibold text-sm shadow-lg shadow-brand-500/25 disabled:opacity-50"
+                        >
+                            {reassignMutation.isLoading ? 'Assigning...' : 'Confirm Reassignment'}
+                        </button>
+                    </>
+                }
+            >
+                {reassigningOrder && (
+                    <div className="p-6 space-y-5">
+                        {/* Order summary chip */}
+                        <div className="bg-slate-50 dark:bg-brand-800/50 rounded-2xl p-4 border border-slate-200/80 dark:border-brand-700/80 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-slate-500">Customer:</span>
+                                <span className="font-semibold text-brand-900 dark:text-white">
+                                    {reassigningOrder.customer?.firstName} {reassigningOrder.customer?.lastName}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-slate-500">Currently Assigned:</span>
+                                <span className="font-medium text-brand-800 dark:text-brand-200">
+                                    {reassigningOrder.salesRep
+                                        ? `${reassigningOrder.salesRep.firstName} ${reassigningOrder.salesRep.lastName}`
+                                        : <span className="text-amber-600 dark:text-amber-400 italic">Unassigned</span>}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-slate-500">Order Amount:</span>
+                                <span className="font-bold text-brand-900 dark:text-white">
+                                    ₦{reassigningOrder.totalAmount?.toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Select Sales Rep */}
+                        <div>
+                            <label className="block text-sm font-semibold text-brand-800 dark:text-white mb-2">
+                                Select Sales Representative
+                            </label>
+                            <select
+                                value={selectedRepId}
+                                onChange={(e) => setSelectedRepId(e.target.value)}
+                                className="w-full px-4 py-3 bg-white dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-xl focus:ring-2 focus:ring-brand-500/20 text-sm font-medium"
+                            >
+                                <option value="">-- Choose a Sales Rep --</option>
+                                {salesReps.map((rep) => {
+                                    const isCurrent = rep.id === (reassigningOrder.salesRep?.id || reassigningOrder.salesRepId);
+                                    return (
+                                        <option key={rep.id} value={rep.id}>
+                                            {rep.firstName} {rep.lastName} ({rep.email}){isCurrent ? ' - Currently Assigned' : ''}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                            {salesReps.length === 0 && (
+                                <p className="text-xs text-rose-500 mt-2">No active sales representatives found.</p>
+                            )}
+                        </div>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                            The reassigned sales representative will immediately see this order in their queue to follow up with the customer and coordinate delivery.
+                        </p>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };
