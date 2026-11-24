@@ -68,7 +68,8 @@ class OrderRepository {
                 'orders.*',
                 'products.name as product_name', 'products.sku as product_sku', 'products.image_url as product_image',
                 'customers.first_name as customer_first_name', 'customers.last_name as customer_last_name',
-                'customers.city as customer_city', 'customers.state as customer_state',
+                'customers.email as customer_email', 'customers.phone as customer_phone',
+                'customers.address as customer_address', 'customers.city as customer_city', 'customers.state as customer_state',
                 'sales_rep.first_name as sales_rep_first_name', 'sales_rep.last_name as sales_rep_last_name'
             );
 

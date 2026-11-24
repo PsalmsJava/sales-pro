@@ -459,6 +459,7 @@ class OrderService {
             customer: {
                 firstName: order.customer_first_name,
                 lastName: order.customer_last_name,
+                email: order.customer_email,
                 phone: order.customer_phone,
                 address: order.customer_address,
                 city: order.customer_city,

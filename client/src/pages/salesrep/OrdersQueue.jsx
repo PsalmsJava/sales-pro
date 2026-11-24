@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Package, CheckCircle, Clock, MapPin, Calendar, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import orderService from '../../services/orderService';
+import CustomerDetailsSection from '../../components/orders/CustomerDetailsSection';
 import SectionCard from '../../components/ui/SectionCard';
 import StatusBadge from '../../components/ui/StatusBadge';
 import EmptyState from '../../components/ui/EmptyState';
@@ -226,6 +227,11 @@ const OrdersQueue = () => {
                                         Not Answering
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* Customer Details Place */}
+                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-brand-800">
+                                <CustomerDetailsSection order={order} />
                             </div>
                         </motion.div>
                     ))}

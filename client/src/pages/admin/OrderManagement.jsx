@@ -5,10 +5,12 @@ import {
     ShoppingCart, Search, Filter, Download, Eye, Truck,
     CheckCircle, XCircle, Clock, Users, MoreHorizontal,
     MapPin, Phone, Mail, Package, ChevronDown, Calendar,
-    SlidersHorizontal, RefreshCw, ArrowUpDown, DollarSign
+    SlidersHorizontal, RefreshCw, ArrowUpDown, DollarSign, Copy
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import orderService from '../../services/orderService';
+import CustomerDetailsSection from '../../components/orders/CustomerDetailsSection';
+import { copyToClipboard, formatCustomerForRider } from '../../utils/orderUtils';
 import StatCard from '../../components/ui/StatCard';
 import SectionCard from '../../components/ui/SectionCard';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -112,7 +114,7 @@ const OrderManagement = () => {
                 <StatCard label="Pending" value={stats.pending} icon={Clock} color="amber" loading={isLoading} />
                 <StatCard label="In Progress" value={stats.processing} icon={RefreshCw} color="blue" loading={isLoading} />
                 <StatCard label="Completed" value={stats.completed} icon={CheckCircle} color="emerald" loading={isLoading} />
-                <StatCard label="Revenue" value={`$${stats.revenue.toLocaleString()}`} icon={DollarSign} color="gold" loading={isLoading} />
+                <StatCard label="Revenue" value={`₦${stats.revenue.toLocaleString()}`} icon={DollarSign} color="gold" loading={isLoading} />
             </div>
 
             {/* Toolbar */}
@@ -223,8 +225,13 @@ const OrderManagement = () => {
                                             <td className="px-4 py-4">
                                                 <p className="text-sm font-medium text-brand-800 dark:text-white">{order.customer?.firstName} {order.customer?.lastName}</p>
                                                 <p className="text-xs text-slate-500">{order.customer?.city}, {order.customer?.state}</p>
+                                                {order.customer?.phone && (
+                                                    <a href={`tel:${order.customer.phone}`} onClick={(e) => e.stopPropagation()} className="text-xs text-brand-600 dark:text-gold-400 hover:underline block mt-0.5">
+                                                        {order.customer.phone}
+                                                    </a>
+                                                )}
                                             </td>
-                                            <td className="px-4 py-4 text-sm font-bold text-right">${order.totalAmount?.toFixed(2)}</td>
+                                            <td className="px-4 py-4 text-sm font-bold text-right">₦{order.totalAmount?.toFixed(2)}</td>
                                             <td className="px-4 py-4 text-center"><StatusBadge status={order.status} size="sm" /></td>
                                             <td className="px-4 py-4 text-center">
                                                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${order.isPaid ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
@@ -233,10 +240,23 @@ const OrderManagement = () => {
                                             </td>
                                             <td className="px-4 py-4 text-xs text-slate-500 text-center">{new Date(order.createdAt).toLocaleDateString()}</td>
                                             <td className="px-4 py-4 text-right">
-                                                <button onClick={(e) => { e.stopPropagation(); setViewingOrder(order); }}
-                                                    className="p-2 text-slate-400 hover:text-brand-600 rounded-xl hover:bg-slate-100 dark:hover:bg-brand-800 opacity-0 group-hover:opacity-100 transition-all">
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
+                                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <button onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        copyToClipboard(formatCustomerForRider(order)).then(ok => {
+                                                            if (ok) toast.success('Customer details copied for rider!');
+                                                        });
+                                                    }}
+                                                        title="Copy Customer Details for Rider"
+                                                        className="p-2 text-slate-400 hover:text-brand-600 dark:hover:text-gold-400 rounded-xl hover:bg-slate-100 dark:hover:bg-brand-800 transition-all">
+                                                        <Copy className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={(e) => { e.stopPropagation(); setViewingOrder(order); }}
+                                                        title="View Order Details"
+                                                        className="p-2 text-slate-400 hover:text-brand-600 rounded-xl hover:bg-slate-100 dark:hover:bg-brand-800 transition-all">
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </motion.tr>
                                     ))}
@@ -279,25 +299,13 @@ const OrderManagement = () => {
                                         <div>
                                             <p className="font-semibold text-brand-800 dark:text-white">{viewingOrder.productName}</p>
                                             <p className="text-sm text-slate-500">Qty: {viewingOrder.quantity}</p>
-                                            <p className="text-xl font-bold text-brand-800 dark:text-white mt-1">${viewingOrder.totalAmount?.toFixed(2)}</p>
+                                            <p className="text-xl font-bold text-brand-800 dark:text-white mt-1">₦{viewingOrder.totalAmount?.toFixed(2)}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Customer Info */}
-                                {viewingOrder.customer && (
-                                    <div className="bg-slate-50 dark:bg-brand-800/50 rounded-2xl p-5">
-                                        <h3 className="text-sm font-semibold text-brand-800 dark:text-white mb-3 flex items-center gap-2">
-                                            <Users className="w-4 h-4" /> Customer
-                                        </h3>
-                                        <div className="space-y-2">
-                                            <p className="font-medium text-brand-800 dark:text-white">{viewingOrder.customer.firstName} {viewingOrder.customer.lastName}</p>
-                                            <div className="flex items-center gap-2 text-sm text-slate-500"><Mail className="w-4 h-4" />{viewingOrder.customer.email}</div>
-                                            <div className="flex items-center gap-2 text-sm text-slate-500"><Phone className="w-4 h-4" />{viewingOrder.customer.phone}</div>
-                                            <div className="flex items-start gap-2 text-sm text-slate-500"><MapPin className="w-4 h-4 mt-0.5" />{viewingOrder.customer.address}, {viewingOrder.customer.city}, {viewingOrder.customer.state}</div>
-                                        </div>
-                                    </div>
-                                )}
+                                <CustomerDetailsSection order={viewingOrder} />
 
                                 {/* Payment Info */}
                                 <div className="grid grid-cols-2 gap-4">

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Package, Calendar, Phone, Clock, Filter } from 'lucide-react';
 import orderService from '../../services/orderService';
+import CustomerDetailsSection from '../../components/orders/CustomerDetailsSection';
 import SectionCard from '../../components/ui/SectionCard';
 import StatusBadge from '../../components/ui/StatusBadge';
 import EmptyState from '../../components/ui/EmptyState';
@@ -185,6 +186,11 @@ const MyOrders = () => {
                                         <span className="font-bold text-brand-800 dark:text-white">₦{order.totalAmount?.toFixed(2)}</span>
                                         <StatusBadge status={order.status} size="sm" />
                                     </div>
+                                </div>
+
+                                {/* Customer Details Place */}
+                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-brand-800">
+                                    <CustomerDetailsSection order={order} />
                                 </div>
                             </motion.div>
                         );
